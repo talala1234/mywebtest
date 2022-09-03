@@ -1,0 +1,2816 @@
+var contextActivity, InJs, jsCommon, powerbi, __spreadArray = this && this.__spreadArray || function(to, from) {
+    for (var i = 0, il = from.length, j = to.length; i < il; i++, j++) to[j] = from[i];
+    return to;
+}, __assign = this && this.__assign || function() {
+    return (__assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) for (var p in s = arguments[i]) Object.prototype.hasOwnProperty.call(s, p) && (t[p] = s[p]);
+        return t;
+    }).apply(this, arguments);
+};
+
+!function(jsCommon) {
+    !function(Base64Utils) {
+        Base64Utils.isBase64 = function(text) {
+            try {
+                return btoa(atob(text)) === text;
+            } catch (err) {
+                return !1;
+            }
+        };
+    }(jsCommon.Base64Utils || (jsCommon.Base64Utils = {}));
+}(jsCommon = jsCommon || {}), function(jsCommon) {
+    !function(UnionExtensions) {
+        UnionExtensions.mergeUnionType = function(arg1, arg2, arg3) {
+            if (arg1 || arg2 || arg3) return !arg1 || arg2 || arg3 ? arg1 || !arg2 || arg3 ? arg1 || arg2 || !arg3 ? $.extend(arg1, arg2, arg3) : arg3 : arg2 : arg1;
+        };
+    }(jsCommon.UnionExtensions || (jsCommon.UnionExtensions = {}));
+}(jsCommon = jsCommon || {}), function(powerbi) {
+    var LruCache = function() {
+        function FifoCache(size) {
+            this.cache = {}, this.capacity = size, this.linkedList = new powerbi.LinkedList();
+        }
+        return FifoCache.prototype.get = function(cacheEntry) {
+            if (cacheEntry in this.cache) {
+                cacheEntry = this.cache[cacheEntry].value;
+                return null == cacheEntry ? void 0 : cacheEntry.value;
+            }
+        }, FifoCache.prototype.remove = function(key) {
+            var nodeToRemove;
+            this.cache[key] && (nodeToRemove = this.cache[key], this.linkedList.remove(nodeToRemove), 
+            delete this.cache[key]);
+        }, FifoCache.prototype.put = function(key, cacheEntryToEvict) {
+            key in this.cache && this.remove(key);
+            cacheEntryToEvict = new CacheEntry(key, cacheEntryToEvict), cacheEntryToEvict = new powerbi.LinkedListNode(cacheEntryToEvict);
+            this.cache[key] = cacheEntryToEvict, this.linkedList.insertToHead(cacheEntryToEvict), 
+            this.size() > this.capacity && (this.size(), this.capacity, cacheEntryToEvict = this.linkedList.tail().value, 
+            delete this.cache[cacheEntryToEvict.key], this.linkedList.removeFromTail());
+        }, FifoCache.prototype.containsKey = function(key) {
+            return key in this.cache;
+        }, FifoCache.prototype.size = function() {
+            return this.keys().length;
+        }, FifoCache.prototype.keys = function() {
+            return Object.keys(this.cache);
+        }, FifoCache.prototype.isFull = function() {
+            return this.size() === this.capacity;
+        }, FifoCache;
+    }();
+    powerbi.FifoCache = LruCache;
+    LruCache = function() {
+        function LruCache(size) {
+            this.cache = {}, this.capacity = size, this.linkedList = new powerbi.LinkedList();
+        }
+        return LruCache.prototype.get = function(nodeToMove) {
+            if (nodeToMove in this.cache) {
+                nodeToMove = this.cache[nodeToMove];
+                return this.linkedList.remove(nodeToMove), this.linkedList.insertToHead(nodeToMove), 
+                nodeToMove.value.value;
+            }
+        }, LruCache.prototype.remove = function(key) {
+            var nodeToRemove;
+            key in this.cache && (nodeToRemove = this.cache[key], this.linkedList.remove(nodeToRemove), 
+            delete this.cache[key]);
+        }, LruCache.prototype.put = function(key, cacheEntryToEvict) {
+            key in this.cache && this.remove(key);
+            cacheEntryToEvict = new CacheEntry(key, cacheEntryToEvict), cacheEntryToEvict = new powerbi.LinkedListNode(cacheEntryToEvict);
+            this.cache[key] = cacheEntryToEvict, this.linkedList.insertToHead(cacheEntryToEvict), 
+            this.size() > this.capacity && (this.size(), this.capacity, cacheEntryToEvict = this.linkedList.tail().value, 
+            delete this.cache[cacheEntryToEvict.key], this.linkedList.removeFromTail());
+        }, LruCache.prototype.containsKey = function(key) {
+            return key in this.cache;
+        }, LruCache.prototype.size = function() {
+            return this.keys().length;
+        }, LruCache.prototype.keys = function() {
+            return Object.keys(this.cache);
+        }, LruCache.prototype.isFull = function() {
+            return this.size() === this.capacity;
+        }, LruCache;
+    }();
+    powerbi.LruCache = LruCache;
+    var CacheEntry = function(key, value) {
+        this.key = key, this.value = value;
+    };
+}(powerbi = powerbi || {}), function(jsCommon) {
+    var ModalDialogNotificationType;
+    !function(ModalDialogNotificationType) {
+        ModalDialogNotificationType[ModalDialogNotificationType.Info = 0] = "Info", ModalDialogNotificationType[ModalDialogNotificationType.Warning = 1] = "Warning", 
+        ModalDialogNotificationType[ModalDialogNotificationType.SecurityWarning = 2] = "SecurityWarning";
+    }(ModalDialogNotificationType = jsCommon.ModalDialogNotificationType || (jsCommon.ModalDialogNotificationType = {})), 
+    jsCommon.PowerBIDefaultHelpPage = "https://support.powerbi.com";
+    var ModalDialogHtml = '<div tabindex="0" prevent-focus-loss="true" focus-nav-mode="Group" class="infonav-modalContainer' + (-1 !== location.search.indexOf("renderAsModalDialog") ? " small" : "") + '"><div class="infonav-modalDialog" tabindex="-1"><div class="infonav-dialogLayout themeableElement"><div class="infonav-dialogTitle" id=infonav-describedBy role="heading" aria-level="1"></div><input type="button" class="infonav-dialogCloseIcon"></input><div class="infonav-dialogContent"><div class="infonav-dialogActions"></div></div></div></div></div>', ModalDialog = function() {
+        function ModalDialog(dialogHost, localizationMap) {
+            this.dialogHost = dialogHost, this.localizationMap = localizationMap, this.messageQueue = [], 
+            this.isReady = !1, this.messageCurrentlyShown = !1, this.initialized = !1;
+        }
+        return ModalDialog.prototype.refocus = function() {
+            this.modalContainer.focus();
+        }, ModalDialog.prototype.showMessage = function(messageTitle, messageText, buttonText, learnMoreLink) {
+            var _this = this;
+            this.ensureInitialized();
+            var dialogContent, actions = [];
+            buttonText = buttonText || (this.localizationMap ? this.localizationMap.closePromptText : InJs.UnlocalizedStrings.dialogCloseActionLabel), 
+            learnMoreLink && (dialogContent = $('<a target="_blank"></a>').text(learnMoreLink.label).attr("href", learnMoreLink.url), 
+            dialogContent = $("<div></div>").text(messageText + " ").append(dialogContent), 
+            messageText = void 0), actions[0] = this.createButton(buttonText, function() {
+                _this.hideDialog();
+            }, null, "primary"), this.pushMessage(messageTitle, messageText, dialogContent, actions, !0);
+        }, ModalDialog.prototype.showPrompt = function(promptTitle, promptText, promptActions, isDismissable) {
+            this.ensureInitialized();
+            for (var actionButtons = new Array(), i = 0; i < promptActions.length; i++) {
+                var thisAction = promptActions[i], cssClass = thisAction.cssClass;
+                0 === i && (cssClass += " primary"), actionButtons[i] = this.createButton(thisAction.labelText, thisAction.actionCallback, thisAction.data, cssClass, thisAction.disabled);
+            }
+            this.pushMessage(promptTitle, promptText, void 0, actionButtons, !!isDismissable);
+        }, ModalDialog.prototype.showError = function(errorText, errorType, additionalErrorInfo, afterDismissCallback, dialogOptions) {
+            this.showCustomError(InJs.UnlocalizedStrings.errorDialogTitle, errorText, errorType, errorType !== jsCommon.TraceType.Fatal, additionalErrorInfo, afterDismissCallback, dialogOptions);
+        }, ModalDialog.prototype.showCustomError = function(errorTitle, errorText, errorHelperText, isDismissable, additionalErrorInfo, afterDismissCallback, dialogFooter, helpLink, onDialogClosed, jQueryMessage, customErrorDialogHelperText, dialogCssClass, containerCssClass) {
+            var _this = this;
+            this.ensureInitialized();
+            var actions = new Array();
+            dialogFooter ? dialogFooter.forEach(function(element) {
+                actions.push(_this.createButton(element.label, function() {
+                    _this.hideDialog(), $.isFunction(afterDismissCallback) && afterDismissCallback(element.resultValue);
+                }, null, element.cssClass, element.disabled));
+            }) : errorHelperText !== jsCommon.TraceType.Fatal ? actions[0] = this.createButton(this.localizationMap ? this.localizationMap.closePromptText : InJs.UnlocalizedStrings.dialogCloseActionLabel, function() {
+                _this.hideDialog(), $.isFunction(afterDismissCallback) && afterDismissCallback(0);
+            }) : actions[0] = this.createButton(this.localizationMap ? this.localizationMap.refreshPagePromptText : InJs.UnlocalizedStrings.dialogRefreshPageActionLabel, function() {
+                window.location.reload();
+            }, null, "primary");
+            var copyText_1, copySuccessText_1, errorDetails_1, copyClipboardButton_1, dialogContent = jQueryMessage ? $("<div></div>").append(jQueryMessage) : $("<div></div>").text(errorText), dialogFooter = $("<div></div>").addClass("infonav-dialogFooter");
+            _.isEmpty(additionalErrorInfo) || (errorHelperText = (this.localizationMap && this.localizationMap.errorDialogHelperText ? this.localizationMap : InJs.UnlocalizedStrings).errorDialogHelperText, 
+            customErrorDialogHelperText && (errorHelperText = customErrorDialogHelperText), 
+            dialogContent.append($("<br/>")).append(errorHelperText), copyText_1 = this.localizationMap ? this.localizationMap.copyPromptText : InJs.UnlocalizedStrings.CopyActionLabel, 
+            copySuccessText_1 = this.localizationMap ? this.localizationMap.copySuccessText : InJs.UnlocalizedStrings.SuccessActionLabel, 
+            errorDetails_1 = {
+                title: errorTitle,
+                message: jQueryMessage ? jQueryMessage.text() : errorText,
+                helperText: errorHelperText,
+                additionalErrorInfo: additionalErrorInfo
+            }, copyClipboardButton_1 = $("<button></button>").text(copyText_1).addClass("modalCopyToClipboard").click(function() {
+                _this.tryCopyToClipboard(errorDetails_1) && (copyClipboardButton_1.text(copySuccessText_1).addClass("modalCopySuccess"), 
+                setTimeout(function() {
+                    copyClipboardButton_1.text(copyText_1).removeClass("modalCopySuccess");
+                }, 3e3));
+            }), dialogFooter.prepend(copyClipboardButton_1)), this.addAdditionalErrorInfo(dialogContent, additionalErrorInfo, this.localizationMap ? this.localizationMap.showTechnicalDetailsText : InJs.UnlocalizedStrings.showDetailsText), 
+            helpLink && (helpLink.url === jsCommon.PowerBIDefaultHelpPage || helpLink.isGetHelpTextReplaced ? dialogFooter.prepend($('<a class="modalErrorHelpLink" target="_blank"></a>').text(helpLink.label).attr("href", helpLink.url)) : actions.unshift(this.createButton(helpLink.label, function() {
+                window.open(helpLink.url);
+            }, null, "primary"))), dialogContent.append(dialogFooter), this.pushMessage(errorTitle || InJs.UnlocalizedStrings.errorDialogTitle, void 0, dialogContent, actions, isDismissable, onDialogClosed, void 0, void 0, dialogCssClass, containerCssClass);
+        }, ModalDialog.prototype.showCustomDialog = function(titleText, dialogContent, dialogActions, onDialogDisplayed, isDismissable, focusOnFirstButton, dialogCssClass, containerCssClass, onDialogClosed, notificationType, notificationText, noActiveButtons, htmlMessageText, flipContentAndNotificationOrder, checkboxAction, closeOnEsc) {
+            this.ensureInitialized(), this.modalDialogResizeHandler = this.modalDialogResizeHandler.bind(this), 
+            $(window).on("resize.modalDialog", this.modalDialogResizeHandler);
+            var actionsButtons = [];
+            checkboxAction && (actionsButtons[0] = this.createCheckbox(checkboxAction.labelText, checkboxAction.actionCallback, checkboxAction.data));
+            for (var i = 0; i < dialogActions.length; i++) {
+                var thisAction = dialogActions[i], cssClass = thisAction.cssClass;
+                noActiveButtons || 0 !== i || (cssClass += " primary"), actionsButtons[checkboxAction ? i + 1 : i] = this.createButton(thisAction.labelText, thisAction.actionCallback, thisAction.data, cssClass, thisAction.disabled);
+            }
+            return this.pushMessage(titleText, void 0, dialogContent, actionsButtons, !!isDismissable, onDialogClosed, onDialogDisplayed, focusOnFirstButton, dialogCssClass, containerCssClass, notificationType, notificationText, noActiveButtons, htmlMessageText, flipContentAndNotificationOrder, closeOnEsc), 
+            this.dialogContent;
+        }, ModalDialog.prototype.hideDialog = function() {
+            var _this = this;
+            this.ensureInitialized(), $(window).off("resize.modalDialog"), this.modalContainer.fadeTo(250, 0, function() {
+                _this.modalContainer.css(jsCommon.CssConstants.displayProperty, jsCommon.CssConstants.noneValue), 
+                _this.modalDialogElement.removeClass(_this.modalDialogCustomClass), _this.modalContainer.removeClass(_this.modalContainerCustomClass), 
+                _this.currentModalDialogMessage && _this.currentModalDialogMessage.onDialogClosed && _this.currentModalDialogMessage.onDialogClosed(), 
+                _this.messageCurrentlyShown = !1;
+                var nextMessage = _this.messageQueue.shift();
+                nextMessage ? _this.showDialogInternal(nextMessage) : (_this.modalContainer.off(), 
+                _this.modalContainer.remove(), $(".infonav-modalContainerHost").off(), $(".infonav-modalContainerHost").remove(), 
+                _this.initialized = !1, _this.unregisterFocusManager && _this.unregisterFocusManager());
+            });
+        }, ModalDialog.prototype.ensureInitialized = function() {
+            var containerHost, _this = this;
+            this.initialized || (this.modalContainer = $(ModalDialogHtml), this.modalDialogElement = this.modalContainer.find(".infonav-modalDialog"), 
+            this.dialogTitle = this.modalContainer.find(".infonav-dialogTitle"), this.dialogCloseButton = this.modalContainer.find(".infonav-dialogCloseIcon"), 
+            this.dialogContent = this.modalContainer.find(".infonav-dialogContent"), this.dialogActions = this.modalContainer.find(".infonav-dialogActions"), 
+            this.dialogCloseButton.on(jsCommon.DOMConstants.mouseClickEventName, function() {
+                return _this.hideDialog();
+            }).on("keydown", function(e) {
+                27 === e.keyCode && _this.hideDialog();
+            }).attr("aria-label", this.localizationMap ? this.localizationMap.closePromptText : InJs.UnlocalizedStrings.dialogCloseActionLabel).attr("name", this.localizationMap ? this.localizationMap.closePromptText : InJs.UnlocalizedStrings.dialogCloseActionLabel).attr("title", this.localizationMap ? this.localizationMap.closePromptText : InJs.UnlocalizedStrings.dialogCloseActionLabel), 
+            this.dialogHost || (containerHost = $(".infonav-modalContainerHost"), _.isEmpty(containerHost) || containerHost.remove(), 
+            (containerHost = InJs.DomFactory.div().addClass("infonav-modalContainerHost")).attr("role", "dialog"), 
+            containerHost.attr("aria-labelledby", "infonav-describedBy"), this.dialogHost = $(jsCommon.DOMConstants.DocumentBody).append(containerHost), 
+            this.dialogHost = containerHost), this.dialogHost.append(this.modalContainer), this.isReady = !0, 
+            0 < this.messageQueue.length && this.showDialogInternal(this.messageQueue.shift()), 
+            this.initialized = !0, this.unregisterFocusManager = jsCommon.FocusManager.getInstance().register(this.dialogHost.get(0), !0), 
+            this.dialogHost = void 0);
+        }, ModalDialog.prototype.updatePosition = function(animate) {
+            var offsetTop = (this.modalContainer.height() - this.modalDialogElement.height()) / 2, newPosition = (this.modalContainer.width() - this.modalDialogElement.width()) / 2, newPosition = {
+                top: offsetTop + jsCommon.CssConstants.pixelUnits,
+                left: newPosition + jsCommon.CssConstants.pixelUnits
+            };
+            animate ? this.modalDialogElement.animate(newPosition, 250) : this.modalDialogElement.css(newPosition);
+        }, ModalDialog.prototype.addAdditionalErrorInfo = function(dialogContent, additionalErrorInfoKeyValuePairs, additionalErrorInfoContainer) {
+            var _this = this;
+            if (!_.isEmpty(additionalErrorInfoKeyValuePairs)) {
+                for (var additionalErrorInfo = $("<p ></p>"), _i = 0, _a = additionalErrorInfoKeyValuePairs; _i < _a.length; _i++) {
+                    var pair = _a[_i];
+                    additionalErrorInfo.append(InJs.InfoNavUtility.constructErrorField(pair.errorInfoKey, pair.errorInfoValue));
+                }
+                additionalErrorInfoContainer = InJs.InfoNavUtility.constructShowDetailsContainer(additionalErrorInfo, additionalErrorInfoContainer);
+                dialogContent.append($("<br />")), dialogContent.append(additionalErrorInfoContainer), 
+                dialogContent.find(".showAdditionalDetailsLink").on(jsCommon.DOMConstants.mouseClickEventName, function() {
+                    _this.updatePosition(!0);
+                });
+            }
+        }, ModalDialog.prototype.pushMessage = function(titleText, messageText, dialogContent, dialogButtons, isDismissable, onDialogClosed, onDialogDisplayed, focusOnFirstButton, dialogCssClass, containerCssClass, notificationType, notificationText, noActiveButtons, htmlMessageText, flipContentAndNotificationOrder, closeOnEsc) {
+            this.messageQueue.push({
+                titleText: titleText,
+                messageText: messageText,
+                dialogContent: dialogContent,
+                dialogButtons: dialogButtons,
+                onDialogDisplayed: onDialogDisplayed,
+                isDismissable: isDismissable = void 0 === isDismissable ? !0 : isDismissable,
+                dialogCssClass: dialogCssClass = void 0 === dialogCssClass ? "" : dialogCssClass,
+                containerCssClass: containerCssClass = void 0 === containerCssClass ? "" : containerCssClass,
+                onDialogClosed: onDialogClosed,
+                notificationType: notificationType,
+                notificationText: notificationText,
+                htmlMessageText: htmlMessageText
+            }), !this.messageCurrentlyShown && this.isReady && this.showDialogInternal(this.messageQueue.shift(), focusOnFirstButton, noActiveButtons, flipContentAndNotificationOrder, closeOnEsc);
+        }, ModalDialog.prototype.tryCopyToClipboard = function(errorCopyText) {
+            if (!errorCopyText) return !1;
+            var errorDetails = [];
+            if (errorCopyText.title && errorDetails.push(errorCopyText.title), errorCopyText.message && errorDetails.push(errorCopyText.message), 
+            errorCopyText.helperText && errorDetails.push(errorCopyText.helperText), errorCopyText.additionalErrorInfo) for (var _i = 0, _a = errorCopyText.additionalErrorInfo; _i < _a.length; _i++) {
+                var detail = _a[_i];
+                errorDetails.push(detail.errorInfoKey + ": " + detail.errorInfoValue);
+            }
+            errorCopyText = errorDetails.join("\n");
+            try {
+                return powerbi.CopyPasteService.create().copyText(errorCopyText), !0;
+            } catch (_b) {
+                return !1;
+            }
+        }, ModalDialog.prototype.showDialogInternal = function(message, focusOnFirstButton, noActiveButtons, fadingElem, closeOnEsc) {
+            var _this = this;
+            if (this.currentModalDialogMessage = message, this.messageCurrentlyShown = !0, this.dialogContentNotification = $('<div class="infonav-dialogContentNotification"><span class="glyphicon"></span><span class= "infonav-dialogContentNotificationText" > </span></div>'), 
+            this.dialogContentNotificationIcon = this.dialogContentNotification.find(".glyphicon"), 
+            this.dialogContentNotificationText = this.dialogContentNotification.find(".infonav-dialogContentNotificationText"), 
+            this.dialogTitle.empty(), this.dialogContent.empty(), this.dialogActions.empty(), 
+            this.dialogTitle.text(message.titleText).attr("title", message.titleText), fadingElem ? (this.appendNotification(message.notificationType, message.notificationText), 
+            this.appendMessageText(message.dialogContent, message.messageText, message.htmlMessageText)) : (this.appendMessageText(message.dialogContent, message.messageText, message.htmlMessageText), 
+            this.appendNotification(message.notificationType, message.notificationText)), message.isDismissable ? this.dialogCloseButton.css(jsCommon.CssConstants.displayProperty, jsCommon.CssConstants.blockValue) : this.dialogCloseButton.css(jsCommon.CssConstants.displayProperty, jsCommon.CssConstants.noneValue), 
+            0 < message.dialogButtons.length) {
+                this.dialogActions.show();
+                for (var _i = 0, _a = message.dialogButtons; _i < _a.length; _i++) {
+                    var button = _a[_i];
+                    this.dialogActions.append(button);
+                }
+            } else this.dialogActions.hide();
+            fadingElem = this.dialogContent.find(".infonav-dialogFooter");
+            0 < fadingElem.length ? fadingElem.append(this.dialogActions) : this.dialogContent.after(this.dialogActions), 
+            message.dialogCssClass && (this.modalDialogElement.addClass(message.dialogCssClass), 
+            this.modalDialogCustomClass = message.dialogCssClass), message.containerCssClass && (this.modalContainer.addClass(message.containerCssClass), 
+            this.modalContainerCustomClass = message.containerCssClass);
+            fadingElem = this.modalContainer.css(jsCommon.CssConstants.displayProperty) === jsCommon.CssConstants.noneValue ? this.modalContainer : this.modalDialogElement;
+            fadingElem.fadeTo(0, 0), this.updatePosition(!1), fadingElem.fadeTo(250, 1, function() {
+                var buttons;
+                message.onDialogDisplayed && message.onDialogDisplayed(_this.dialogContent), 0 < _this.modalDialogElement.find("dialog-frame").length || (0 === _this.modalDialogElement.find(":focus").length && _this.modalDialogElement.focus(), 
+                closeOnEsc && _this.modalDialogElement.keydown(function(e) {
+                    27 === e.keyCode && _this.hideDialog();
+                }), buttons = _this.dialogActions.find("input"), !noActiveButtons && 0 < buttons.length && buttons[0].focus(), 
+                focusOnFirstButton && _this.dialogContent.parent().find(".infonav-dialogActions input[type=button]:first").focus());
+            });
+        }, ModalDialog.prototype.appendMessageText = function(dialogContent, messageText, htmlMessageText) {
+            _.isEmpty(messageText) && dialogContent ? this.dialogContent.append(dialogContent) : this.dialogContent.text(messageText), 
+            _.isEmpty(htmlMessageText) || (this.dialogContentMessage = this.dialogContent.find(".dialogMessage"), 
+            this.dialogContentMessage.html(htmlMessageText));
+        }, ModalDialog.prototype.appendNotification = function(notificationType, notificationText) {
+            if (null !== notificationType && !_.isEmpty(notificationText)) {
+                switch (notificationType) {
+                  case ModalDialogNotificationType.Info:
+                    this.dialogContentNotificationIcon.addClass("pbi-glyph-info glyph-mini"), this.dialogContentNotification.addClass("typeInfo");
+                    break;
+
+                  case ModalDialogNotificationType.Warning:
+                    this.dialogContentNotificationIcon.addClass("pbi-glyph-warning glyph-mini"), this.dialogContentNotification.addClass("typeWarning");
+                    break;
+
+                  case ModalDialogNotificationType.SecurityWarning:
+                    this.dialogContentNotificationIcon.addClass("pbi-glyph-securityalert glyph-mini"), 
+                    this.dialogContentNotification.addClass("typeSecurityWarning");
+                }
+                this.dialogContentNotificationText.html(notificationText), this.dialogContent.append(this.dialogContentNotification);
+            }
+        }, ModalDialog.prototype.createButton = function(labelText, action, data, cssClass, disabled) {
+            var _this = this, button = $('<input type="button"></input>');
+            return button.attr("value", labelText), button.on(jsCommon.DOMConstants.mouseClickEventName, function() {
+                action(button, _this.dialogContent, data);
+            }), cssClass && button.addClass(cssClass), disabled && button.prop("disabled", !0), 
+            button;
+        }, ModalDialog.prototype.createCheckbox = function(checkboxDivElement, action, data) {
+            var _this = this, checkboxDivElement = $('<div class="pbi-input checkbox"><input type="checkbox"></input><label class="form-label">' + checkboxDivElement + "</label></div>"), checkbox = checkboxDivElement.find("input");
+            return checkbox.on(jsCommon.DOMConstants.changeEventName, function() {
+                action(checkbox, _this.dialogContent, data);
+            }), checkboxDivElement;
+        }, ModalDialog.prototype.modalDialogResizeHandler = function() {
+            this.updatePosition(!1);
+        }, ModalDialog;
+    }();
+    jsCommon.ModalDialog = ModalDialog;
+}(jsCommon = jsCommon || {}), function(InJs) {
+    InJs.ModalDialogAction = function(labelText, actionCallback, data, cssClass, disabled) {
+        this.labelText = labelText, this.actionCallback = actionCallback, this.data = data, 
+        this.cssClass = cssClass, this.disabled = !!disabled;
+    };
+}(InJs = InJs || {}), function(jsCommon) {
+    var CircularStack = function() {
+        function CircularStack(size) {
+            this.count = 0, this.top = -1, this.size = size, this.data = new Array(size);
+        }
+        return CircularStack.prototype.item = function(index) {
+            0 <= index && this.count;
+            var bottom = this.top - (this.count - 1);
+            return bottom < 0 && (bottom += this.size), this.data[(index + bottom) % this.size];
+        }, CircularStack.prototype.push = function(item) {
+            this.count < this.size && this.count++, this.top = ++this.top % this.size, this.data[this.top] = item;
+        }, CircularStack.prototype.pop = function() {
+            if (0 !== this.count) {
+                this.count--;
+                var item = this.data[this.top];
+                return delete this.data[this.top], -1 == --this.top && 0 < this.count && (this.top = this.size - 1), 
+                item;
+            }
+        }, CircularStack.prototype.peek = function() {
+            return this.data[this.top];
+        }, CircularStack.prototype.clear = function() {
+            this.count = 0, this.top = -1, this.data = new Array(this.size);
+        }, Object.defineProperty(CircularStack.prototype, "length", {
+            get: function() {
+                return this.count;
+            },
+            enumerable: !1,
+            configurable: !0
+        }), CircularStack;
+    }();
+    jsCommon.CircularStack = CircularStack;
+}(jsCommon = jsCommon || {}), function(jsCommon) {
+    var Double = powerbi.Double;
+    !function(StringExtensions) {
+        StringExtensions.parseIntSubstrFast = function(fullString, from, length) {
+            if (fullString.length, 0 === length) return null;
+            for (var value = 0, digitExponent = 0, charIndex = from + length - 1; digitExponent < length; digitExponent++, 
+            charIndex--) {
+                var digit = fullString.charCodeAt(charIndex) - 48;
+                if (digit < 0 || 9 < digit) return null;
+                value += digit * Double.pow10(digitExponent);
+            }
+            return value;
+        }, StringExtensions.literalStringToRegex = function(string, flags) {
+            return new RegExp(string.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&"), flags);
+        };
+    }(jsCommon.StringExtensions || (jsCommon.StringExtensions = {}));
+}(jsCommon = jsCommon || {}), function(jsCommon) {
+    var Double = powerbi.Double, contract = powerbi.contract, parseIntSubstrFast = jsCommon.StringExtensions.parseIntSubstrFast;
+    !function(DateExtensions) {
+        function isMomentPresent() {
+            return "undefined" != typeof moment;
+        }
+        function parseIsoDateFast(subsecondValue) {
+            if (subsecondValue) {
+                var numSubsecondDigits = subsecondValue.length;
+                if (!(numSubsecondDigits <= 18 || 28 < numSubsecondDigits)) {
+                    var milliseconds = subsecondValue[10];
+                    if ("-" === subsecondValue[4] && "-" === subsecondValue[7] && ("T" === milliseconds || " " === milliseconds) && ":" === subsecondValue[13] && ":" === subsecondValue[16]) {
+                        var year = parseIntSubstrFast(subsecondValue, 0, 4), month = parseIntSubstrFast(subsecondValue, 5, 2), day = parseIntSubstrFast(subsecondValue, 8, 2), hour = parseIntSubstrFast(subsecondValue, 11, 2), minute = parseIntSubstrFast(subsecondValue, 14, 2), second = parseIntSubstrFast(subsecondValue, 17, 2), utc = "Z" === subsecondValue.charAt(numSubsecondDigits - 1);
+                        utc && numSubsecondDigits--;
+                        milliseconds = 0;
+                        if (19 < numSubsecondDigits) {
+                            if ("." !== subsecondValue[19]) return;
+                            numSubsecondDigits = numSubsecondDigits - 20, subsecondValue = parseIntSubstrFast(subsecondValue, 20, numSubsecondDigits);
+                            if (null === subsecondValue) return;
+                            milliseconds = subsecondValue * Double.pow10(3 - numSubsecondDigits);
+                        }
+                        if (null !== year && null !== month && null !== day && null !== hour && null !== minute && null !== second && null !== milliseconds) return utc ? new Date(Date.UTC(year, month - 1, day, hour, minute, second, milliseconds)) : powerbi.createDateWithEpochValue(year, month - 1, day, hour, minute, second, milliseconds);
+                    }
+                }
+            }
+        }
+        function deserializeDate(ticksValue) {
+            if (jsCommon.Utility.throwIfNullOrEmptyString(ticksValue, null, "deserializeDate", "Cannot deserialize empty string"), 
+            contract.check(0 === ticksValue.indexOf("/Date(") && _.endsWith(ticksValue, ")/"), "Cannot deserialize empty string"), 
+            DateExtensions.isMomentPresent()) {
+                var parsedValue = moment(ticksValue);
+                return contract.check(parsedValue.isValid(), "parsedValue.isValid must be true"), 
+                parsedValue.toDate();
+            }
+            ticksValue = ticksValue.substring("/Date(".length, ticksValue.length - ")/".length);
+            contract.check(/^\-?\d+$/.test(ticksValue), "Cannot deserialize invalid date");
+            ticksValue = parseInt(ticksValue, 10);
+            return contract.check(!isNaN(ticksValue), "Cannot deserialize invalid date"), new Date(ticksValue);
+        }
+        DateExtensions.isLocalMidnight = function(date) {
+            return (date.getTime() - 6e4 * date.getTimezoneOffset()) % 864e5 == 0;
+        }, DateExtensions.isMomentPresent = isMomentPresent, DateExtensions.parseIsoDate = function(momentDate) {
+            var parsedDate = parseIsoDateFast(momentDate);
+            return parsedDate || (isMomentPresent(), (momentDate = moment(momentDate)).isValid() ? momentDate.toDate() : null);
+        }, DateExtensions.parseIsoDateFast = parseIsoDateFast, DateExtensions.parseUtcDate = function(isoDate) {
+            return isMomentPresent(), moment.utc(isoDate).toDate();
+        }, DateExtensions.serializeDate = function(date) {
+            return "/Date(" + date.getTime().toString() + ")/";
+        }, DateExtensions.deserializeDate = deserializeDate, DateExtensions.tryDeserializeDate = function(data) {
+            try {
+                return deserializeDate(data);
+            } catch (e) {}
+        }, DateExtensions.isContainedInTimeFrame = function(date, unit, dateForComparison, shouldGoToStart) {
+            return dateForComparison = moment().subtract(dateForComparison, unit), shouldGoToStart && (dateForComparison = dateForComparison.startOf(unit)), 
+            moment(date) >= dateForComparison;
+        }, DateExtensions.GetTime = function(locale, date) {
+            return date.toLocaleTimeString(locale, {
+                second: "numeric",
+                minute: "numeric",
+                hour: "numeric"
+            });
+        }, DateExtensions.GetDayWithTime = function(locale, date) {
+            return date.toLocaleDateString(locale, {
+                second: "numeric",
+                minute: "numeric",
+                hour: "numeric",
+                weekday: "short"
+            });
+        }, DateExtensions.GetFullDateWithTime = function(locale, date) {
+            return date.toLocaleDateString(locale, {
+                second: "numeric",
+                minute: "numeric",
+                hour: "numeric",
+                day: "numeric",
+                month: "short",
+                year: "numeric"
+            });
+        };
+    }(jsCommon.DateExtensions || (jsCommon.DateExtensions = {}));
+}(jsCommon = jsCommon || {}), function(powerbi_1) {
+    powerbi_1.ensurePowerbiTelemetry = function() {
+        var powerbi = powerbi_1.ensurePowerbi();
+        return powerbi.telemetry || (powerbi.telemetry = {}), powerbi.telemetry;
+    }, powerbi_1.ensurePowerbiSession = function() {
+        var powerbi = powerbi_1.ensurePowerbi();
+        return powerbi.session || (powerbi.session = {}), powerbi.session;
+    }, powerbi_1.ensurePowerbiHelpers = function() {
+        var powerbi = powerbi_1.ensurePowerbi();
+        return powerbi.helpers || (powerbi.helpers = {}), powerbi.helpers;
+    };
+}(powerbi = powerbi || {}), function(jsCommon) {
+    !function(ExceptionHelper) {
+        function stripPII(_exception) {}
+        ExceptionHelper.stripPII = stripPII, ExceptionHelper.cleanExceptionStack = function(exception) {
+            try {
+                if (!exception) return;
+                var stack = exception.stack;
+                if (!stack) return;
+                var lineFeedIndex = stack.indexOf("\n");
+                return -1 === lineFeedIndex ? void 0 : stack = (stack = stack.substring(lineFeedIndex + 1)).replace(/\s*((ms-pbi|https):\/\/\S*|\(.*?\))/g, function(matches) {
+                    matches = matches.match(/([\w\.-]+\.(js|html)(:\d+:\d+)?)/);
+                    return null != matches ? " (" + matches[1] + ")" : "";
+                });
+            } catch (_a) {
+                return "Error at cleanExceptionStack";
+            }
+        }, ExceptionHelper.cleanExceptionMessage = function(exception) {
+            var _a;
+            try {
+                if (exception instanceof TypeError || exception instanceof ReferenceError) return exception.message;
+                if (exception) return "Error of type " + exception.name + " had a " + (null === (_a = exception.message) || void 0 === _a ? void 0 : _a.length) + " characters long message";
+            } catch (_b) {
+                return "Error at cleanExceptionMessage";
+            }
+        }, ExceptionHelper.handleErrorAndLogTelemetry = function(telemetryService, eventFactory, stack, parentActivity) {
+            if (!(stack instanceof Error)) try {
+                throw new Error("Error wrapper for thrown object: " + JSON.stringify(stack));
+            } catch (e) {
+                stack = e;
+            }
+            if (!stack.rejection || !(stack.rejection.clientError && stack.rejection.clientError.ignorable || stack.rejection.ignorable)) {
+                ExceptionHelper.stripPII(stack);
+                var message = stack.message, stack = stack.stack;
+                try {
+                    parentActivity ? telemetryService.logChildEvent(parentActivity.event, eventFactory, {
+                        stack: stack,
+                        message: message
+                    }) : telemetryService.logEvent(eventFactory, {
+                        stack: stack,
+                        message: message
+                    });
+                } catch (e) {}
+            }
+        }, ExceptionHelper.getExceptionHandler = function(telemetryService, customTraceLoggerService, eventFactory) {
+            return function(exception, formattedError) {
+                var message = exception.message + ' (caused by "' + formattedError + '")\n', exceptionStack = (exception.stack || exception).toString(), formattedError = message + exceptionStack;
+                try {
+                    telemetryService.logEvent(eventFactory, {
+                        stack: exceptionStack,
+                        message: message
+                    });
+                    var logEntry = {
+                        consoleMessage: formattedError,
+                        type: "console_log",
+                        createdTime: new Date()
+                    };
+                    customTraceLoggerService.addLogEntry(logEntry);
+                } catch (exception) {}
+            };
+        }, ExceptionHelper.getWindowOnErrorWrapper = function(telemetryService, originalWindowOnError, eventFactoryNoStack, eventFactoryWithStack) {
+            return function(messageObj, source, lineNumber, columnNumber, errorObj) {
+                var stack, message;
+                if (2 !== lineNumber || 8228 !== columnNumber || !_.includes(source, "powerbiportal.dependencies.bundle")) return errorObj && errorObj.message && errorObj.stack ? (message = errorObj.message, 
+                stack = errorObj.stack, telemetryService.logEvent(eventFactoryWithStack, {
+                    source: jsCommon.QueryStringUtil.clearAllQueriesFromUrl(source),
+                    lineNumber: lineNumber,
+                    columnNumber: columnNumber || 0,
+                    stack: stack,
+                    message: message
+                })) : "object" == typeof messageObj && messageObj.message && messageObj.stack ? (message = messageObj.message, 
+                stack = messageObj.stack, telemetryService.logEvent(eventFactoryWithStack, {
+                    source: jsCommon.QueryStringUtil.clearAllQueriesFromUrl(source),
+                    lineNumber: lineNumber,
+                    columnNumber: columnNumber || 0,
+                    stack: stack,
+                    message: message
+                })) : (message = JSON.stringify(messageObj, Object.getOwnPropertyNames(messageObj)), 
+                telemetryService.logEvent(eventFactoryNoStack, {
+                    source: jsCommon.QueryStringUtil.clearAllQueriesFromUrl(source),
+                    lineNumber: lineNumber,
+                    columnNumber: columnNumber || 0,
+                    message: message
+                })), originalWindowOnError(messageObj, source, lineNumber, columnNumber, errorObj), 
+                !0;
+            };
+        };
+    }(jsCommon.ExceptionHelper || (jsCommon.ExceptionHelper = {}));
+}(jsCommon = jsCommon || {}), function(jsCommon_1) {
+    var checkedQueryParams = {}, QueryStringUtil = function() {
+        function QueryStringUtil() {}
+        return QueryStringUtil.clearQueryString = function(queryField) {
+            var queries = QueryStringUtil.parseQueryString();
+            return delete queries[queryField], QueryStringUtil.rebuildQueryString(queries);
+        }, QueryStringUtil.clearQueryStrings = function(queryFields) {
+            for (var queries = QueryStringUtil.parseQueryString(), _i = 0, queryFields_1 = queryFields; _i < queryFields_1.length; _i++) delete queries[queryFields_1[_i]];
+            return QueryStringUtil.rebuildQueryString(queries);
+        }, QueryStringUtil.addOrUpdateQueryString = function(queryField, queryValue) {
+            var queries = QueryStringUtil.parseQueryString();
+            return queries[queryField] = queryValue, QueryStringUtil.rebuildQueryString(queries);
+        }, QueryStringUtil.addOrUpdateQueryStringToUrl = function(baseUrl, queries) {
+            for (var combinedQueries = QueryStringUtil.parseUrl(baseUrl), baseUrl = QueryStringUtil.clearAllQueriesFromUrl(baseUrl), _i = 0, _a = Object.keys(queries); _i < _a.length; _i++) {
+                var key = _a[_i];
+                combinedQueries[key] = queries[key];
+            }
+            return baseUrl + QueryStringUtil.rebuildQueryString(combinedQueries);
+        }, QueryStringUtil.getQueryStringValue = function(key) {
+            return QueryStringUtil.parseQueryString()[key];
+        }, QueryStringUtil.isQueryParamSet = function(key, canCache) {
+            var queryValue, value = checkedQueryParams[key];
+            return canCache && void 0 !== value || (value = null != (queryValue = QueryStringUtil.getQueryStringValue(key)) && "false" !== queryValue && ("1" === queryValue || "true" === queryValue.toLowerCase() || 1 < queryValue.length), 
+            canCache && (checkedQueryParams[key] = value)), value;
+        }, QueryStringUtil.parseUrl = function(url) {
+            var queryString = url.indexOf("?"), queryString = 0 <= queryString ? url.substr(queryString) : void 0;
+            return QueryStringUtil.parseQueryString(queryString);
+        }, QueryStringUtil.parseQueryString = function(search) {
+            var queryStringDictionary = {}, search = search = void 0 === search ? window.location.search : search;
+            if (search && "?" === search.substr(0, 1)) for (var _i = 0, pairs_1 = search.substr(1).split("&"); _i < pairs_1.length; _i++) {
+                var value = pairs_1[_i].split("="), key = value[0], value = value.slice(1).join("=");
+                queryStringDictionary[decodeURIComponent(key)] = decodeURIComponent(value);
+            }
+            return queryStringDictionary;
+        }, QueryStringUtil.parseQueryStringWithMultipleKeyValues = function(search) {
+            var queryStringDictionary = {}, search = search = void 0 === search ? window.location.search : search;
+            if (search && "?" === search.substr(0, 1)) for (var _i = 0, pairs_2 = search.substr(1).split("&"); _i < pairs_2.length; _i++) {
+                var decodedValue = pairs_2[_i].split("="), key = decodedValue[0], decodedValue = decodedValue.slice(1).join("="), decodedValue = decodeURIComponent(decodedValue);
+                queryStringDictionary[decodeURIComponent(key)] ? queryStringDictionary[decodeURIComponent(key)].push(decodedValue) : queryStringDictionary[decodeURIComponent(key)] = [ decodedValue ];
+            }
+            return queryStringDictionary;
+        }, QueryStringUtil.rebuildQueryString = function(queries) {
+            var queryField, queryString = "", isEmpty = !0;
+            for (queryField in queries) isEmpty || (queryString += "&"), queryString += encodeURIComponent(queryField) + "=", 
+            queries[queryField] && (queryString += encodeURIComponent(queries[queryField])), 
+            isEmpty = !1;
+            return queryString = !isEmpty ? "?" + queryString : queryString;
+        }, QueryStringUtil.clearAllQueriesFromUrl = function(url) {
+            var queryStartIndex = url.indexOf("?"), fragmentStartIndex = url.indexOf("#");
+            return 0 <= (queryStartIndex = 0 <= fragmentStartIndex && (fragmentStartIndex < queryStartIndex || -1 === queryStartIndex) ? fragmentStartIndex : queryStartIndex) ? url.substr(0, queryStartIndex) : url;
+        }, QueryStringUtil.fileOfUrl = function(url) {
+            var slash = (url = QueryStringUtil.clearAllQueriesFromUrl(url)).lastIndexOf("/");
+            return url = -1 !== slash ? url.substring(slash + 1) : url;
+        }, QueryStringUtil.OriginClientActivityIdParameterName = "caid", QueryStringUtil.OriginRootActivityIdParameterName = "raid", 
+        QueryStringUtil.OriginActivityIdParameterName = "aid", QueryStringUtil;
+    }();
+    function ensureJsCommonQueryStringUtil() {
+        var jsCommon = powerbi.ensureJsCommon();
+        return jsCommon.QueryStringUtil || (jsCommon.QueryStringUtil = {}), jsCommon.QueryStringUtil;
+    }
+    function exportQueryStringUtilToGlobal() {
+        var orgGetQueryStringValue, orgParseQueryString;
+        exported || (orgGetQueryStringValue = jsCommon.QueryStringUtil.getQueryStringValue, 
+        ensureJsCommonQueryStringUtil().getQueryStringValue = function(key) {
+            return orgGetQueryStringValue(key);
+        }, orgParseQueryString = jsCommon.QueryStringUtil.parseQueryString, ensureJsCommonQueryStringUtil().parseQueryString = function(queryString) {
+            return void 0 === queryString && (queryString = window.location.search), orgParseQueryString(queryString);
+        }, exported = !0);
+    }
+    jsCommon_1.QueryStringUtil = QueryStringUtil, jsCommon_1.exportQueryStringUtilToGlobal = exportQueryStringUtilToGlobal;
+    var exported = !1;
+    exportQueryStringUtilToGlobal();
+}(jsCommon = jsCommon || {}), function(powerbi) {
+    powerbi.createRejectablePromise2 = function(deferred) {
+        return new RejectablePromiseImpl(deferred);
+    }, powerbi.createRejectablePromise = function(deferred) {
+        return new RejectablePromiseImpl(deferred);
+    };
+    var RejectablePromiseImpl = function() {
+        function RejectablePromiseImpl(deferred) {
+            var _this = this;
+            this.deferred = deferred, this.state = 0, deferred.promise.then(function() {
+                return _this.state = 1;
+            }, function() {
+                return _this.state = 2;
+            });
+        }
+        return RejectablePromiseImpl.prototype.then = function(successCallback, errorCallback) {
+            return this.deferred.promise.then(successCallback, errorCallback);
+        }, RejectablePromiseImpl.prototype.catch = function(callback) {
+            return this.deferred.promise.catch(callback);
+        }, RejectablePromiseImpl.prototype.finally = function(callback) {
+            return this.deferred.promise.finally(callback);
+        }, RejectablePromiseImpl.prototype.resolved = function() {
+            return 1 === this.state;
+        }, RejectablePromiseImpl.prototype.rejected = function() {
+            return 2 === this.state;
+        }, RejectablePromiseImpl.prototype.pending = function() {
+            return 0 === this.state;
+        }, RejectablePromiseImpl.prototype.reject = function(reason) {
+            this.pending() && (this.deferred.reject(reason), this.state = 2);
+        }, RejectablePromiseImpl;
+    }();
+}(powerbi = powerbi || {}), function(powerbi) {
+    var RejectablePromiseCache = function() {
+        function LegacyRejectablePromiseCache(promiseFactory, maxCacheEntries) {
+            this.maxCacheEntries = maxCacheEntries || 500, this.cache = {}, this.promiseFactory = promiseFactory;
+        }
+        return LegacyRejectablePromiseCache.prototype.getEntryCount = function() {
+            return Object.keys(this.cache).length;
+        }, LegacyRejectablePromiseCache.prototype.hasCacheEntry = function(cacheKey) {
+            return !!this.getCacheEntry(cacheKey);
+        }, LegacyRejectablePromiseCache.prototype.createCacheEntry = function(cacheKey, context, rewriteResult, rewriteCachedResult, telemetryV2Enabled) {
+            var _this = this, cacheEntry = this.getCacheEntry(cacheKey);
+            if (cacheKey && !cacheEntry) {
+                var promiseFactory = this.promiseFactory, queryCache = this.cache, deferred = promiseFactory.defer(telemetryV2Enabled), promise = powerbi.createRejectablePromise(deferred), entryDeferred = promiseFactory.defer(telemetryV2Enabled), entryPromise = powerbi.createRejectablePromise2(entryDeferred), cacheEntry = {
+                    promise: entryPromise,
+                    refCount: 0,
+                    context: context
+                };
+                return this.appendCacheEntryInternal(cacheKey, cacheEntry), this.getEntryCount() > this.maxCacheEntries && this.removeCacheEntryInternal(this.firstKey), 
+                promise.then(function(result) {
+                    (result = cacheEntry.updateResult ? cacheEntry.updateResult(result) : result) && rewriteResult && (result = rewriteResult(result)), 
+                    cacheEntry.result = rewriteCachedResult ? rewriteCachedResult(result) : result, 
+                    entryDeferred.resolve(result);
+                }, function(reason) {
+                    return entryDeferred.reject(reason);
+                }).finally(function() {
+                    delete cacheEntry.updateResult;
+                }), entryPromise.finally(function() {
+                    queryCache[cacheKey] && (delete queryCache[cacheKey].promise, entryPromise.rejected() && _this.removeCacheEntryInternal(cacheKey));
+                }).catch(function(errorReason) {
+                    return promise.reject(errorReason);
+                }), {
+                    deferred: deferred,
+                    promise: promise
+                };
+            }
+        }, LegacyRejectablePromiseCache.prototype.clearEntry = function(cacheKey, rejectPromise) {
+            var cachePromise = this.getCacheEntry(cacheKey);
+            if (cachePromise) {
+                cachePromise = cachePromise.promise;
+                return rejectPromise && cachePromise ? cachePromise.reject() : this.removeCacheEntryInternal(cacheKey), 
+                !0;
+            }
+            return !1;
+        }, LegacyRejectablePromiseCache.prototype.clearAllEntries = function(rejectPromise) {
+            for (var cacheKey in this.cache) this.clearEntry(cacheKey, rejectPromise);
+        }, LegacyRejectablePromiseCache.prototype.bindCacheEntry = function(promise, bindingResultRewriter, bindingResult) {
+            var cacheEntry = this.getCacheEntry(promise);
+            if (void 0 !== cacheEntry) {
+                var deferred = this.promiseFactory.defer(bindingResult), promise = powerbi.createRejectablePromise2(deferred);
+                if (cacheEntry.result) {
+                    bindingResult = bindingResultRewriter ? bindingResultRewriter(cacheEntry.result) : cacheEntry.result;
+                    return deferred.resolve(bindingResult), promise;
+                }
+                var cachePromise = cacheEntry.promise;
+                if (!cachePromise) return deferred.reject(void 0), promise;
+                cacheEntry.refCount++;
+                function finallyCallback(errorReason) {
+                    cacheEntry.refCount--, 0 === cacheEntry.refCount && cachePromise.pending() && cachePromise.reject(errorReason);
+                }
+                return promise.then(function() {
+                    return finallyCallback();
+                }, finallyCallback), cachePromise.then(function(bindingResult) {
+                    bindingResult = bindingResultRewriter ? bindingResultRewriter(bindingResult) : bindingResult;
+                    deferred.resolve(bindingResult);
+                }, function(errorReason) {
+                    return deferred.reject(errorReason);
+                }), promise;
+            }
+        }, LegacyRejectablePromiseCache.prototype.getEntryContext = function(cacheEntry) {
+            cacheEntry = this.getCacheEntry(cacheEntry);
+            if (cacheEntry) return cacheEntry.context;
+        }, LegacyRejectablePromiseCache.prototype.keys = function() {
+            return Object.keys(this.cache);
+        }, LegacyRejectablePromiseCache.prototype.isFull = function() {
+            return 500 === this.getEntryCount();
+        }, LegacyRejectablePromiseCache.prototype.rewriteAllEntries = function(rewriter) {
+            var cacheKey, entry, keyUpdates = [], hasRewriteKey = !!rewriter.rewriteKey, hasRewriteResult = !!rewriter.rewriteResult, queryCache = this.cache;
+            for (cacheKey in queryCache) !hasRewriteKey || (entry = rewriter.rewriteKey(cacheKey)) !== cacheKey && keyUpdates.push({
+                oldKey: cacheKey,
+                newKey: entry
+            }), hasRewriteResult && ((entry = queryCache[cacheKey]) && entry.result && rewriter.rewriteResult ? entry.result = rewriter.rewriteResult(entry.result, cacheKey) : entry.updateResult = function(result) {
+                return rewriter.rewriteResult && rewriter.rewriteResult(result, cacheKey) || result;
+            });
+            for (var i = 0, length_1 = keyUpdates.length; i < length_1; i++) this.changeCacheKey(keyUpdates[i].oldKey, keyUpdates[i].newKey);
+        }, LegacyRejectablePromiseCache.prototype.putCacheResult = function(cacheEntry, newResult, rewriteCacheEntryResult) {
+            cacheEntry = this.getCacheEntry(cacheEntry);
+            cacheEntry && (cacheEntry.result ? cacheEntry.result = rewriteCacheEntryResult ? rewriteCacheEntryResult(newResult) : newResult : cacheEntry.updateResult = function() {
+                return newResult;
+            });
+        }, LegacyRejectablePromiseCache.prototype.appendCacheEntryInternal = function(cacheKey, cacheEntry) {
+            this.cache[cacheKey] && this.removeCacheEntryInternal(cacheKey), this.firstKey ? (this.cache[this.lastKey].nextKey = cacheKey, 
+            cacheEntry.previousKey = this.lastKey, this.lastKey = cacheKey, cacheEntry.nextKey = void 0) : (this.firstKey = cacheKey, 
+            this.lastKey = cacheKey, cacheEntry.nextKey = void 0, cacheEntry.previousKey = void 0), 
+            this.cache[cacheKey] = cacheEntry;
+        }, LegacyRejectablePromiseCache.prototype.removeCacheEntryInternal = function(cacheKey) {
+            var previousKey, nextKey = this.cache[cacheKey];
+            nextKey && (previousKey = nextKey.previousKey, nextKey = nextKey.nextKey, previousKey ? this.cache[previousKey].nextKey = nextKey : this.firstKey = nextKey, 
+            nextKey ? this.cache[nextKey].previousKey = previousKey : this.lastKey = previousKey, 
+            delete this.cache[cacheKey]);
+        }, LegacyRejectablePromiseCache.prototype.changeCacheKey = function(oldKey, newKey) {
+            if (!newKey) return this.clearEntry(oldKey, !0);
+            if (this.hasCacheEntry(newKey) || !this.hasCacheEntry(oldKey)) return !1;
+            var cacheEntry = this.getCacheEntry(oldKey);
+            return this.removeCacheEntryInternal(oldKey), this.appendCacheEntryInternal(newKey, cacheEntry), 
+            !0;
+        }, LegacyRejectablePromiseCache.prototype.getCacheEntry = function(cacheKey) {
+            var entry;
+            if (cacheKey && (entry = this.cache[cacheKey]) && (entry.promise || entry.result)) return entry;
+        }, LegacyRejectablePromiseCache;
+    }();
+    powerbi.LegacyRejectablePromiseCache = RejectablePromiseCache;
+    RejectablePromiseCache = function() {
+        function RejectablePromiseCache(promiseFactory, evictionPolicy, maxCacheEntries) {
+            this.cache = new (1 === evictionPolicy ? powerbi.LruCache : powerbi.FifoCache)(maxCacheEntries = maxCacheEntries || 500), 
+            this.promiseFactory = promiseFactory;
+        }
+        return RejectablePromiseCache.prototype.getEntryCount = function() {
+            return this.cache.size();
+        }, RejectablePromiseCache.prototype.hasCacheEntry = function(cacheKey) {
+            return !!this.getCacheEntry(cacheKey);
+        }, RejectablePromiseCache.prototype.createCacheEntry = function(cacheKey, context, rewriteResult, rewriteCachedResult, telemetryV2Enabled) {
+            var _this = this, cacheEntry = this.getCacheEntry(cacheKey);
+            if (cacheKey && !cacheEntry) {
+                var promiseFactory = this.promiseFactory, queryCache = this.cache, deferred = promiseFactory.defer(telemetryV2Enabled), promise = powerbi.createRejectablePromise(deferred), entryDeferred = promiseFactory.defer(telemetryV2Enabled), entryPromise = powerbi.createRejectablePromise2(entryDeferred), cacheEntry = {
+                    promise: entryPromise,
+                    refCount: 0,
+                    context: context
+                };
+                return this.appendCacheEntryInternal(cacheKey, cacheEntry), promise.then(function(result) {
+                    (result = cacheEntry.updateResult ? cacheEntry.updateResult(result) : result) && rewriteResult && (result = rewriteResult(result)), 
+                    cacheEntry.result = rewriteCachedResult ? rewriteCachedResult(result) : result, 
+                    entryDeferred.resolve(result);
+                }, function(reason) {
+                    return entryDeferred.reject(reason);
+                }).finally(function() {
+                    delete cacheEntry.updateResult;
+                }), entryPromise.finally(function() {
+                    queryCache.containsKey(cacheKey) && (delete queryCache.get(cacheKey).promise, entryPromise.rejected() && _this.removeCacheEntryInternal(cacheKey));
+                }).catch(function(errorReason) {
+                    return promise.reject(errorReason);
+                }), {
+                    deferred: deferred,
+                    promise: promise
+                };
+            }
+        }, RejectablePromiseCache.prototype.clearEntry = function(cacheKey, rejectPromise) {
+            var cachePromise = this.getCacheEntry(cacheKey);
+            if (cachePromise) {
+                cachePromise = cachePromise.promise;
+                return rejectPromise && cachePromise ? cachePromise.reject() : this.removeCacheEntryInternal(cacheKey), 
+                !0;
+            }
+            return !1;
+        }, RejectablePromiseCache.prototype.clearAllEntries = function(rejectPromise) {
+            for (var _i = 0, _a = this.cache.keys(); _i < _a.length; _i++) {
+                var cacheKey = _a[_i];
+                this.clearEntry(cacheKey, rejectPromise);
+            }
+        }, RejectablePromiseCache.prototype.bindCacheEntry = function(promise, bindingResultRewriter, bindingResult) {
+            var cacheEntry = this.getCacheEntry(promise);
+            if (void 0 !== cacheEntry) {
+                var deferred = this.promiseFactory.defer(bindingResult), promise = powerbi.createRejectablePromise2(deferred);
+                if (cacheEntry.result) {
+                    bindingResult = bindingResultRewriter ? bindingResultRewriter(cacheEntry.result) : cacheEntry.result;
+                    return deferred.resolve(bindingResult), promise;
+                }
+                var cachePromise = cacheEntry.promise;
+                if (!cachePromise) return deferred.reject(void 0), promise;
+                cacheEntry.refCount++;
+                function finallyCallback(errorReason) {
+                    cacheEntry.refCount--, 0 === cacheEntry.refCount && cachePromise.pending() && cachePromise.reject(errorReason);
+                }
+                return promise.then(function() {
+                    return finallyCallback();
+                }, finallyCallback), cachePromise.then(function(bindingResult) {
+                    bindingResult = bindingResultRewriter ? bindingResultRewriter(bindingResult) : bindingResult;
+                    deferred.resolve(bindingResult);
+                }, function(errorReason) {
+                    return deferred.reject(errorReason);
+                }), promise;
+            }
+        }, RejectablePromiseCache.prototype.getEntryContext = function(cacheEntry) {
+            cacheEntry = this.getCacheEntry(cacheEntry);
+            if (cacheEntry) return cacheEntry.context;
+        }, RejectablePromiseCache.prototype.keys = function() {
+            return this.cache.keys();
+        }, RejectablePromiseCache.prototype.isFull = function() {
+            return this.cache.isFull();
+        }, RejectablePromiseCache.prototype.rewriteAllEntries = function(rewriter) {
+            for (var keyUpdates = [], hasRewriteKey = !!rewriter.rewriteKey, hasRewriteResult = !!rewriter.rewriteResult, queryCache = this.cache, _i = 0, _a = queryCache.keys(); _i < _a.length; _i++) !function(cacheKey) {
+                var entry;
+                !hasRewriteKey || (entry = rewriter.rewriteKey(cacheKey)) !== cacheKey && keyUpdates.push({
+                    oldKey: cacheKey,
+                    newKey: entry
+                }), !hasRewriteResult || (entry = queryCache.get(cacheKey)) && (entry.result && rewriter.rewriteResult ? entry.result = rewriter.rewriteResult(entry.result, cacheKey) : entry.updateResult = function(result) {
+                    return rewriter.rewriteResult && rewriter.rewriteResult(result, cacheKey) || result;
+                });
+            }(_a[_i]);
+            for (var i = 0, length_2 = keyUpdates.length; i < length_2; i++) this.changeCacheKey(keyUpdates[i].oldKey, keyUpdates[i].newKey);
+        }, RejectablePromiseCache.prototype.putCacheResult = function(cacheEntry, newResult, rewriteCacheEntryResult) {
+            cacheEntry = this.getCacheEntry(cacheEntry);
+            cacheEntry && (cacheEntry.result ? cacheEntry.result = rewriteCacheEntryResult ? rewriteCacheEntryResult(newResult) : newResult : cacheEntry.updateResult = function() {
+                return newResult;
+            });
+        }, RejectablePromiseCache.prototype.appendCacheEntryInternal = function(cacheKey, cacheEntry) {
+            this.cache.containsKey(cacheKey) && this.removeCacheEntryInternal(cacheKey), this.cache.put(cacheKey, cacheEntry);
+        }, RejectablePromiseCache.prototype.removeCacheEntryInternal = function(cacheKey) {
+            this.cache.remove(cacheKey);
+        }, RejectablePromiseCache.prototype.changeCacheKey = function(oldKey, newKey) {
+            if (!newKey) return this.clearEntry(oldKey, !0);
+            if (this.hasCacheEntry(newKey) || !this.hasCacheEntry(oldKey)) return !1;
+            var cacheEntry = this.getCacheEntry(oldKey);
+            return this.removeCacheEntryInternal(oldKey), this.appendCacheEntryInternal(newKey, cacheEntry), 
+            !0;
+        }, RejectablePromiseCache.prototype.getCacheEntry = function(cacheKey) {
+            var entry;
+            if (cacheKey && (entry = this.cache.get(cacheKey)) && (entry.promise || entry.result)) return entry;
+        }, RejectablePromiseCache;
+    }();
+    powerbi.RejectablePromiseCache = RejectablePromiseCache;
+}(powerbi = powerbi || {}), function(powerbi) {
+    !function(events) {
+        var KeyUtils = jsCommon.KeyUtils;
+        events.visualThemeChanged = {
+            type: 2,
+            name: "visualThemeChanged"
+        }, events.isKeyboardEventIncomplete = function(event) {
+            return null != event.composed && null != event.repeat && (!event.composed || event.repeat && (17 === event.keyCode || KeyUtils.isNudgeModifierKey(event.keyCode)));
+        };
+    }(powerbi.events || (powerbi.events = {}));
+}(powerbi = powerbi || {}), function(powerbi) {
+    var ArrayExtensions = jsCommon.ArrayExtensions;
+    !function(ItemGroupingManager) {
+        function removeMultiple(removeList, itemList, isCleanUpEmptyGroup) {
+            return void 0 === isCleanUpEmptyGroup && (isCleanUpEmptyGroup = !0), itemList = executeAllImmutable(itemList, function(list) {
+                var afterRemovedList = _.differenceWith(list, removeList, function(a, b) {
+                    return a.name === b.name;
+                });
+                return afterRemovedList.length === list.length ? list : afterRemovedList;
+            }), itemList = isCleanUpEmptyGroup ? cleanUpEmptyGroups(itemList) : itemList;
+        }
+        function cleanUpEmptyGroups(itemList) {
+            return executeAllImmutable(itemList, function(list) {
+                return ArrayExtensions.filterArray(list, function(node) {
+                    return !isGroupItem(node) || !_.isEmpty(node.children);
+                });
+            });
+        }
+        function executeByNameImmutable(targetName, itemList, callback) {
+            for (var index = 0; index < itemList.length; index++) {
+                var state_1 = function(newChildren) {
+                    var item = itemList[newChildren];
+                    if (item.name === targetName) return {
+                        value: callback(itemList, item, newChildren)
+                    };
+                    if (isGroupItem(item)) {
+                        newChildren = executeByNameImmutable(targetName, item.children, callback);
+                        if (newChildren !== item.children) {
+                            var newGroup_1 = item.clone ? item.clone() : _.clone(item);
+                            newGroup_1.children = newChildren;
+                            for (var _i = 0, _a = newGroup_1.children; _i < _a.length; _i++) _a[_i].parentGroup = newGroup_1;
+                            return {
+                                value: ArrayExtensions.rewriteArray(itemList, function(node) {
+                                    return node === item ? newGroup_1 : node;
+                                })
+                            };
+                        }
+                    }
+                }(index);
+                if ("object" == typeof state_1) return state_1.value;
+            }
+            return itemList;
+        }
+        function executeAllImmutable(itemList, callback) {
+            for (var _i = 0, itemList_2 = itemList; _i < itemList_2.length; _i++) !function(item) {
+                if (isGroupItem(item)) {
+                    var childrenList = executeAllImmutable(item.children, callback);
+                    if (childrenList !== item.children) {
+                        var newGroup_2 = item.clone ? item.clone() : _.clone(item);
+                        newGroup_2.children = childrenList;
+                        for (var _a = 0, _b = newGroup_2.children; _a < _b.length; _a++) _b[_a].parentGroup = newGroup_2;
+                        itemList = ArrayExtensions.rewriteArray(itemList, function(node) {
+                            return node === item ? newGroup_2 : node;
+                        });
+                    }
+                }
+            }(itemList_2[_i]);
+            return itemList = callback(itemList);
+        }
+        function isGroupItem(item) {
+            return void 0 !== item.children;
+        }
+        ItemGroupingManager.find = function(name, itemList) {
+            var foundNode;
+            if (name && itemList) return executeByNameImmutable(name, itemList, function(list, item, _index) {
+                return foundNode = item, list;
+            }), foundNode;
+        }, ItemGroupingManager.getSiblingList = function(item, itemList) {
+            var foundList;
+            return executeByNameImmutable(item.name, itemList, function(list, _item, _index) {
+                return foundList = list;
+            }), foundList;
+        }, ItemGroupingManager.add = function(itemList) {
+            for (var items = [], _i = 1; _i < arguments.length; _i++) items[_i - 1] = arguments[_i];
+            return __spreadArray(__spreadArray([], itemList || []), items || []);
+        }, ItemGroupingManager.addToGroup = function(newItem, group, itemList) {
+            return executeByNameImmutable(group.name, itemList, function(list, item, _index) {
+                if (!isGroupItem(item)) return list;
+                var newGroup = item.clone ? item.clone() : _.clone(item);
+                newGroup.children = __spreadArray(__spreadArray([], item.children || []), [ newItem ]);
+                for (var _i = 0, _a = newGroup.children; _i < _a.length; _i++) _a[_i].parentGroup = newGroup;
+                return ArrayExtensions.rewriteArray(list, function(node) {
+                    return node === item ? newGroup : node;
+                });
+            });
+        }, ItemGroupingManager.remove = function(item, itemList, isCleanUpEmptyGroup) {
+            return void 0 === isCleanUpEmptyGroup && (isCleanUpEmptyGroup = !0), itemList = executeByNameImmutable(item.name, itemList, function(list, item, _index) {
+                return ArrayExtensions.filterArray(list, function(node) {
+                    return item !== node;
+                });
+            }), itemList = isCleanUpEmptyGroup ? cleanUpEmptyGroups(itemList) : itemList;
+        }, ItemGroupingManager.removeMultiple = removeMultiple, ItemGroupingManager.removeBy = function(itemList, predicate) {
+            return cleanUpEmptyGroups(itemList = executeAllImmutable(itemList, function(list) {
+                return ArrayExtensions.filterArray(list, function(node) {
+                    return !predicate(node);
+                });
+            }));
+        }, ItemGroupingManager.move = function(sources, target, itemList, append) {
+            return sources.forEach(function(source) {
+                return source.parentGroup = void 0;
+            }), itemList = removeMultiple(sources, itemList, !1), cleanUpEmptyGroups(itemList = executeByNameImmutable(target.name, itemList, function(list, item, _index) {
+                return ArrayExtensions.spliceArray(list, function(node) {
+                    return node === item ? append ? __spreadArray([ node ], sources) : __spreadArray(__spreadArray([], sources), [ node ]) : [ node ];
+                });
+            }));
+        }, ItemGroupingManager.group = function(newGroup, itemList) {
+            for (var _i = 0, _a = newGroup.children; _i < _a.length; _i++) _a[_i].parentGroup = newGroup;
+            return cleanUpEmptyGroups(itemList = function(groupedItems, newGroup, itemList) {
+                return executeAllImmutable(itemList, function(list) {
+                    return ArrayExtensions.spliceArray(list, function(node) {
+                        return node === groupedItems[0] ? [ newGroup ] : _.includes(groupedItems, node) ? [] : [ node ];
+                    });
+                });
+            }(newGroup.children, newGroup, itemList));
+        }, ItemGroupingManager.ungroup = function(group, itemList) {
+            for (var _i = 0, _a = group.children; _i < _a.length; _i++) _a[_i].parentGroup = void 0;
+            return executeByNameImmutable(group.name, itemList, function(list, _item, _index) {
+                return ArrayExtensions.spliceArray(list, function(node) {
+                    return node === group ? group.children : [ node ];
+                });
+            });
+        }, ItemGroupingManager.flattenItems = function flattenItems(itemList, isItemType, flattenedList) {
+            for (var currentList = flattenedList || [], _i = 0, itemList_1 = itemList; _i < itemList_1.length; _i++) {
+                var item = itemList_1[_i];
+                isGroupItem(item) ? currentList = flattenItems(item.children, isItemType, currentList) : isItemType(item) && (currentList = __spreadArray(__spreadArray([], currentList || []), [ item ]));
+            }
+            return currentList;
+        };
+    }(powerbi.ItemGroupingManager || (powerbi.ItemGroupingManager = {}));
+}(powerbi = powerbi || {}), function(powerbi) {
+    var CopyPasteService = function() {
+        function CopyPasteService(_telemetryService) {
+            this.element = document.createElement("textarea"), this.element.style.position = "absolute", 
+            this.element.style.left = "-9999px";
+        }
+        return CopyPasteService.prototype.copyText = function(value, telemetryService, visualType) {
+            var text;
+            "string" == typeof value ? text = value : "function" == typeof value && (text = value()), 
+            this.copyToClipboard(text), this.logTelemetry(telemetryService, "Value", visualType);
+        }, CopyPasteService.prototype.copyGrid = function(grid, telemetryService, visualType) {
+            var coveragePercentage = grid(), grid = coveragePercentage.grid, coveragePercentage = coveragePercentage.coveragePercentage, lines = [];
+            if (!_.isEmpty(grid)) for (var _i = 0, grid_1 = grid; _i < grid_1.length; _i++) {
+                var row = grid_1[_i];
+                if (!_.isEmpty(row)) {
+                    for (var _b = 0, row_1 = row; _b < row_1.length; _b++) {
+                        var cell = row_1[_b];
+                        this.removeBreaks(cell);
+                    }
+                    lines.push(row.join("\t"));
+                }
+            }
+            this.copyToClipboard(lines.join("\n")), this.logTelemetry(telemetryService, "Selection", visualType, coveragePercentage);
+        }, CopyPasteService.prototype.removeBreaks = function(text) {
+            return text.replace(new RegExp("\t", "g"), " ").replace(new RegExp("\r\n", "g"), " ").replace(new RegExp("\n", "g"), " ");
+        }, CopyPasteService.prototype.copyToClipboard = function(activeElement) {
+            this.element.value = activeElement, document.body.appendChild(this.element);
+            activeElement = document.activeElement;
+            this.element.select(), document.execCommand("copy"), document.body.removeChild(this.element), 
+            activeElement && activeElement.focus();
+        }, CopyPasteService.prototype.logTelemetry = function(telemetryService, copyType, visualType, coveragePercentage) {
+            telemetryService && telemetryService.logEvent(powerbi.telemetry.EXCopyActionClicked, {
+                copyType: copyType,
+                visualType: visualType || "(unknown)",
+                copySelectionPercentage: coveragePercentage || 0
+            });
+        }, CopyPasteService;
+    }();
+    powerbi.CopyPasteService = CopyPasteService, function(CopyPasteService) {
+        var instance;
+        CopyPasteService.create = function() {
+            return instance = instance || new CopyPasteService();
+        };
+    }(powerbi.CopyPasteService || (powerbi.CopyPasteService = {}));
+}(powerbi = powerbi || {}), function(powerbi) {
+    (powerbi.telemetry || (powerbi.telemetry = {})).EventFactories = {};
+}(powerbi = powerbi || {}), function(powerbi) {
+    var generateGuid = jsCommon.Utility.generateGuid, OverrideRestrictedFields = [ "sessionId", "tenantObjectId", "userObjectId", "userId", "isInternalUser", "sessionSource" ];
+    function getHashCode(inputStr) {
+        var hash = 0;
+        if (0 === inputStr.length) return hash;
+        for (var lowerInputString = inputStr.toLowerCase(), i = 0, len = lowerInputString.length; i < len; i++) hash = (hash << 5) - hash + lowerInputString.charCodeAt(i), 
+        hash |= 0;
+        return hash;
+    }
+    function extendFormattedEx(toEventObject, fromEventObject, fieldsToExcludeIfUndefinedOrFalse) {
+        if (fieldsToExcludeIfUndefinedOrFalse) {
+            var field, keys = [];
+            for (field in fieldsToExcludeIfUndefinedOrFalse) {
+                var value = fromEventObject[fieldsToExcludeIfUndefinedOrFalse[field]];
+                void 0 !== value && !1 !== value || keys.push(fieldsToExcludeIfUndefinedOrFalse[field]);
+            }
+            fromEventObject = _.omit(fromEventObject, keys);
+        }
+        return _.extend(toEventObject, fromEventObject), toEventObject;
+    }
+    function telemetryBaseEventFactory(parameters) {
+        var baseEventInfo = null !== (baseEvent = null === (baseEventInfo = null == (parameters = void 0 === parameters ? {} : parameters) ? void 0 : parameters.baseEvent) || void 0 === baseEventInfo ? void 0 : baseEventInfo.info) && void 0 !== baseEvent ? baseEvent : {}, baseEvent = null == parameters ? void 0 : parameters.baseEvent, info = __assign(__assign({}, baseEventInfo), parameters.info), optionalParameters = parameters.optionalParameters ? null != baseEvent && baseEvent.optionalParameters ? __spreadArray(__spreadArray([], parameters.optionalParameters), null == baseEvent ? void 0 : baseEvent.optionalParameters) : parameters.optionalParameters : null == baseEvent ? void 0 : baseEvent.optionalParameters;
+        return {
+            formatted: function() {
+                return extendFormattedEx({}, info, optionalParameters);
+            },
+            optionalParameters: optionalParameters,
+            info: info
+        };
+    }
+    function isAngularZone(zone) {
+        return zone && !0 === zone.get("isAngularZone");
+    }
+    powerbi.getHashCode = getHashCode, powerbi.obfuscate = function(inputStr) {
+        return getHashCode(inputStr).toString();
+    }, powerbi.extendFormatted = function(requiredFields, optionalFields, target) {
+        var value, result = target || requiredFields || {};
+        if (target && requiredFields && (target = jsCommon.UnionExtensions.mergeUnionType(target, requiredFields)), 
+        optionalFields) for (var key in optionalFields) optionalFields.hasOwnProperty(key) && (void 0 !== (value = optionalFields[key]) && !1 !== value && (result[key] = value));
+        return result;
+    }, powerbi.extendFormattedEx = extendFormattedEx, powerbi.telemetryEventFactory = function(parameters) {
+        var base = telemetryBaseEventFactory(parameters = void 0 === parameters ? {} : parameters);
+        return __assign(__assign({
+            time: Date.now(),
+            id: generateGuid()
+        }, parameters), {
+            info: base.info,
+            formatted: base.formatted
+        });
+    }, powerbi.telemetryBaseEventFactory = telemetryBaseEventFactory, powerbi.fillTelemetryEvent = function(currentEvent, info) {
+        _.isEmpty(currentEvent), Zone;
+        var currentZone = Zone.current;
+        if (currentZone && currentZone.name === currentEvent) {
+            currentEvent = currentZone.get("data");
+            if (currentEvent) {
+                for (var _i = 0, OverrideRestrictedFields_1 = OverrideRestrictedFields; _i < OverrideRestrictedFields_1.length; _i++) {
+                    var field = OverrideRestrictedFields_1[_i];
+                    if (void 0 !== info[field]) throw new Error("Field '" + field + "' is restricted from override.");
+                }
+                currentEvent = currentEvent.monitoredActivity && currentEvent.monitoredActivity.activityEvent;
+                _.extend(currentEvent.info, info);
+            }
+        } else currentZone && currentZone.name;
+    }, powerbi.zoneify = function(currentZone, fn, thisArg) {
+        return currentZone ? currentZone.run(function() {
+            return fn.apply(thisArg);
+        }) : thisArg ? thisArg.fn() : fn();
+    }, powerbi.isAngularZone = isAngularZone, powerbi.hasPendingMicrotasks = function(zone) {
+        for (var result = !1, currentZone = zone; currentZone && isAngularZone(currentZone); ) {
+            if (0 < currentZone._zoneDelegate._taskCounts.microTask) {
+                result = !0;
+                break;
+            }
+            currentZone = currentZone.parent;
+        }
+        return result;
+    };
+}(powerbi = powerbi || {}), function(powerbi) {
+    !function(telemetry) {
+        var Utility = jsCommon.Utility, telemetryEventFactory = powerbi.telemetryEventFactory, telemetryBaseEventFactory = powerbi.telemetryBaseEventFactory, EventFactories = powerbi.telemetry.EventFactories;
+        Utility ? Utility.generateGuid : Function.prototype;
+        telemetry.BaseEventEventName = "BaseEvent", telemetry.BaseEvent = EventFactories[telemetry.BaseEventEventName] = function(parameters) {
+            return telemetryBaseEventFactory({
+                info: __assign({
+                    isError: !1,
+                    isCancelled: !1,
+                    isFireAndForget: !1,
+                    inTeams: !1
+                }, parameters),
+                optionalParameters: [ "isError", "errorSource", "errorCode", "activityName", "activityId", "isCancelled", "pingLatency", "errorMessage", "folderId", "activeFolderCapacityId", "baseVersion", "isFireAndForget", "inTeams", "expAssignment", "hostPlatformType", "hostPlatformName" ]
+            });
+        }, telemetry.TimedEventEventName = "TimedEvent", telemetry.TimedEvent = EventFactories[telemetry.TimedEventEventName] = function(parameters) {
+            return telemetryBaseEventFactory({
+                info: parameters,
+                baseEvent: telemetry.BaseEvent(parameters)
+            });
+        }, telemetry.VerboseEventName = "Verbose", telemetry.Verbose = EventFactories[telemetry.VerboseEventName] = function(parameters) {
+            return telemetryBaseEventFactory({
+                info: parameters,
+                baseEvent: telemetry.BaseEvent(parameters)
+            });
+        }, telemetry.VerboseTimedEventEventName = "VerboseTimedEvent", telemetry.VerboseTimedEvent = EventFactories[telemetry.VerboseTimedEventEventName] = function(parameters) {
+            return telemetryBaseEventFactory({
+                info: parameters,
+                baseEvent: telemetry.Verbose(parameters)
+            });
+        }, telemetry.TraceEventName = "Trace", telemetry.Trace = EventFactories[telemetry.TraceEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.TraceEventName,
+                info: parameters,
+                category: powerbi.TelemetryCategory.Trace,
+                loggers: telemetry.TraceLoggers
+            });
+        }, telemetry.ErrorEventName = "Error", telemetry.Error = EventFactories[telemetry.ErrorEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.ErrorEventName,
+                info: parameters,
+                category: powerbi.TelemetryCategory.CriticalError,
+                loggers: telemetry.ErrorLoggers
+            });
+        }, telemetry.ErrorWithStackTraceEventName = "ErrorWithStackTrace", telemetry.ErrorWithStackTrace = EventFactories[telemetry.ErrorWithStackTraceEventName] = function(parameters) {
+            return telemetryBaseEventFactory({
+                info: parameters
+            });
+        }, telemetry.ErrorWithStackTraceAndSourceDetailsEventName = "ErrorWithStackTraceAndSourceDetails", 
+        telemetry.ErrorWithStackTraceAndSourceDetails = EventFactories[telemetry.ErrorWithStackTraceAndSourceDetailsEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.ErrorWithStackTraceAndSourceDetailsEventName,
+                baseEvent: telemetry.ErrorWithStackTrace(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CriticalError,
+                loggers: telemetry.ErrorWithStackTraceAndSourceDetailsLoggers
+            });
+        }, telemetry.CustomerActionEventName = "CustomerAction", telemetry.CustomerAction = EventFactories[telemetry.CustomerActionEventName] = function(parameters) {
+            return telemetryBaseEventFactory({
+                info: parameters,
+                baseEvent: telemetry.BaseEvent(parameters)
+            });
+        }, telemetry.DashboardRootSessionEventName = "PBI.Dashboard.RootSession", telemetry.DashboardRootSession = EventFactories[telemetry.DashboardRootSessionEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.DashboardRootSessionEventName,
+                baseEvent: telemetry.Verbose(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.Verbose,
+                loggers: telemetry.DashboardRootSessionLoggers
+            });
+        }, telemetry.WFEErrorEventName = "PBI.WFE.Error", telemetry.WFEError = EventFactories[telemetry.WFEErrorEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.WFEErrorEventName,
+                baseEvent: telemetry.Verbose(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.Verbose,
+                loggers: telemetry.WFEErrorLoggers
+            });
+        }, telemetry.TeamsRedirectTabConfigPageEventName = "PBI.TeamsRedirect.TabConfigPage", 
+        telemetry.TeamsRedirectTabConfigPage = EventFactories[telemetry.TeamsRedirectTabConfigPageEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.TeamsRedirectTabConfigPageEventName,
+                baseEvent: telemetry.CustomerAction(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CustomerAction,
+                loggers: telemetry.TeamsRedirectTabConfigPageLoggers
+            });
+        }, telemetry.TeamsRedirectPersonalAppEventName = "PBI.TeamsRedirect.PersonalApp", 
+        telemetry.TeamsRedirectPersonalApp = EventFactories[telemetry.TeamsRedirectPersonalAppEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.TeamsRedirectPersonalAppEventName,
+                baseEvent: telemetry.CustomerAction(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CustomerAction,
+                loggers: telemetry.TeamsRedirectPersonalAppLoggers
+            });
+        }, telemetry.TeamsRedirectTabReportEventName = "PBI.TeamsRedirect.TabReport", telemetry.TeamsRedirectTabReport = EventFactories[telemetry.TeamsRedirectTabReportEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.TeamsRedirectTabReportEventName,
+                baseEvent: telemetry.CustomerAction(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CustomerAction,
+                loggers: telemetry.TeamsRedirectTabReportLoggers
+            });
+        }, telemetry.TeamsRedirectUpdateTabUrlEventName = "PBI.TeamsRedirect.UpdateTabUrl", 
+        telemetry.TeamsRedirectUpdateTabUrl = EventFactories[telemetry.TeamsRedirectUpdateTabUrlEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.TeamsRedirectUpdateTabUrlEventName,
+                baseEvent: telemetry.CustomerAction(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CustomerAction,
+                loggers: telemetry.TeamsRedirectUpdateTabUrlLoggers
+            });
+        }, telemetry.TeamsAuthenticationSSOSuccessEventName = "PBI.TeamsAuthentication.SSOSuccess", 
+        telemetry.TeamsAuthenticationSSOSuccess = EventFactories[telemetry.TeamsAuthenticationSSOSuccessEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.TeamsAuthenticationSSOSuccessEventName,
+                baseEvent: telemetry.CustomerAction(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CustomerAction,
+                loggers: telemetry.TeamsAuthenticationSSOSuccessLoggers
+            });
+        }, telemetry.TeamsAuthenticationSSOFailedEventName = "PBI.TeamsAuthentication.SSOFailed", 
+        telemetry.TeamsAuthenticationSSOFailed = EventFactories[telemetry.TeamsAuthenticationSSOFailedEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.TeamsAuthenticationSSOFailedEventName,
+                baseEvent: telemetry.CustomerAction(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CustomerAction,
+                loggers: telemetry.TeamsAuthenticationSSOFailedLoggers
+            });
+        }, telemetry.TeamsAuthenticationTokenFromLocalStorageExpiredEventName = "PBI.TeamsAuthentication.TokenFromLocalStorageExpired", 
+        telemetry.TeamsAuthenticationTokenFromLocalStorageExpired = EventFactories[telemetry.TeamsAuthenticationTokenFromLocalStorageExpiredEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.TeamsAuthenticationTokenFromLocalStorageExpiredEventName,
+                baseEvent: telemetry.CustomerAction(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CustomerAction,
+                loggers: telemetry.TeamsAuthenticationTokenFromLocalStorageExpiredLoggers
+            });
+        }, telemetry.TeamsAuthenticationTokenIsFromLocalStorageEventName = "PBI.TeamsAuthentication.TokenIsFromLocalStorage", 
+        telemetry.TeamsAuthenticationTokenIsFromLocalStorage = EventFactories[telemetry.TeamsAuthenticationTokenIsFromLocalStorageEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.TeamsAuthenticationTokenIsFromLocalStorageEventName,
+                baseEvent: telemetry.CustomerAction(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CustomerAction,
+                loggers: telemetry.TeamsAuthenticationTokenIsFromLocalStorageLoggers
+            });
+        }, telemetry.TeamsAuthenticationTokenIsFromAuthContextCacheEventName = "PBI.TeamsAuthentication.TokenIsFromAuthContextCache", 
+        telemetry.TeamsAuthenticationTokenIsFromAuthContextCache = EventFactories[telemetry.TeamsAuthenticationTokenIsFromAuthContextCacheEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.TeamsAuthenticationTokenIsFromAuthContextCacheEventName,
+                baseEvent: telemetry.CustomerAction(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CustomerAction,
+                loggers: telemetry.TeamsAuthenticationTokenIsFromAuthContextCacheLoggers
+            });
+        }, telemetry.TeamsAuthenticationTokenIsFromMSALCacheEventName = "PBI.TeamsAuthentication.TokenIsFromMSALCache", 
+        telemetry.TeamsAuthenticationTokenIsFromMSALCache = EventFactories[telemetry.TeamsAuthenticationTokenIsFromMSALCacheEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.TeamsAuthenticationTokenIsFromMSALCacheEventName,
+                baseEvent: telemetry.CustomerAction(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CustomerAction,
+                loggers: telemetry.TeamsAuthenticationTokenIsFromMSALCacheLoggers
+            });
+        }, telemetry.TeamsAuthenticationTokenFromMSALWrongAudienceEventName = "PBI.TeamsAuthentication.TokenFromMSALWrongAudience", 
+        telemetry.TeamsAuthenticationTokenFromMSALWrongAudience = EventFactories[telemetry.TeamsAuthenticationTokenFromMSALWrongAudienceEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.TeamsAuthenticationTokenFromMSALWrongAudienceEventName,
+                baseEvent: telemetry.CustomerAction(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CustomerAction,
+                loggers: telemetry.TeamsAuthenticationTokenFromMSALWrongAudienceLoggers
+            });
+        }, telemetry.TeamsAuthenticationTokenFromMSALParseErrorEventName = "PBI.TeamsAuthentication.TokenFromMSALParseError", 
+        telemetry.TeamsAuthenticationTokenFromMSALParseError = EventFactories[telemetry.TeamsAuthenticationTokenFromMSALParseErrorEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.TeamsAuthenticationTokenFromMSALParseErrorEventName,
+                baseEvent: telemetry.CustomerAction(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CustomerAction,
+                loggers: telemetry.TeamsAuthenticationTokenFromMSALParseErrorLoggers
+            });
+        }, telemetry.TeamsAuthenticationTokenFromMSALNotPresentEventName = "PBI.TeamsAuthentication.TokenFromMSALNotPresent", 
+        telemetry.TeamsAuthenticationTokenFromMSALNotPresent = EventFactories[telemetry.TeamsAuthenticationTokenFromMSALNotPresentEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.TeamsAuthenticationTokenFromMSALNotPresentEventName,
+                baseEvent: telemetry.CustomerAction(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CustomerAction,
+                loggers: telemetry.TeamsAuthenticationTokenFromMSALNotPresentLoggers
+            });
+        }, telemetry.TeamsAuthenticationTokenIsFromTeamsSDKEventName = "PBI.TeamsAuthentication.TokenIsFromTeamsSDK", 
+        telemetry.TeamsAuthenticationTokenIsFromTeamsSDK = EventFactories[telemetry.TeamsAuthenticationTokenIsFromTeamsSDKEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.TeamsAuthenticationTokenIsFromTeamsSDKEventName,
+                baseEvent: telemetry.CustomerAction(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CustomerAction,
+                loggers: telemetry.TeamsAuthenticationTokenIsFromTeamsSDKLoggers
+            });
+        }, telemetry.TeamsAuthenticationErrorEventName = "PBI.TeamsAuthentication.Error", 
+        telemetry.TeamsAuthenticationError = EventFactories[telemetry.TeamsAuthenticationErrorEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.TeamsAuthenticationErrorEventName,
+                baseEvent: telemetry.Verbose(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.Verbose,
+                loggers: telemetry.TeamsAuthenticationErrorLoggers
+            });
+        }, telemetry.TeamsAuthenticationHostPlatformInformationErrorEventName = "PBI.TeamsAuthentication.HostPlatformInformationError", 
+        telemetry.TeamsAuthenticationHostPlatformInformationError = EventFactories[telemetry.TeamsAuthenticationHostPlatformInformationErrorEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.TeamsAuthenticationHostPlatformInformationErrorEventName,
+                baseEvent: telemetry.CustomerAction(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CustomerAction,
+                loggers: telemetry.TeamsAuthenticationHostPlatformInformationErrorLoggers
+            });
+        }, telemetry.StaticTeamsSignUpPbiSourceRewriteErrorEventName = "PBI.StaticTeamsSignUp.PbiSourceRewriteError", 
+        telemetry.StaticTeamsSignUpPbiSourceRewriteError = EventFactories[telemetry.StaticTeamsSignUpPbiSourceRewriteErrorEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.StaticTeamsSignUpPbiSourceRewriteErrorEventName,
+                baseEvent: telemetry.Verbose(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.Verbose,
+                loggers: telemetry.StaticTeamsSignUpPbiSourceRewriteErrorLoggers
+            });
+        }, telemetry.StaticTeamsSignUpAuthCompleteRemovalErrorEventName = "PBI.StaticTeamsSignUp.AuthCompleteRemovalError", 
+        telemetry.StaticTeamsSignUpAuthCompleteRemovalError = EventFactories[telemetry.StaticTeamsSignUpAuthCompleteRemovalErrorEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.StaticTeamsSignUpAuthCompleteRemovalErrorEventName,
+                baseEvent: telemetry.Verbose(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.Verbose,
+                loggers: telemetry.StaticTeamsSignUpAuthCompleteRemovalErrorLoggers
+            });
+        }, telemetry.TeamsLoginResultTokenAcquiredSuccessEventName = "PBI.TeamsLoginResult.TokenAcquiredSuccess", 
+        telemetry.TeamsLoginResultTokenAcquiredSuccess = EventFactories[telemetry.TeamsLoginResultTokenAcquiredSuccessEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.TeamsLoginResultTokenAcquiredSuccessEventName,
+                baseEvent: telemetry.CustomerAction(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CustomerAction,
+                loggers: telemetry.TeamsLoginResultTokenAcquiredSuccessLoggers
+            });
+        }, telemetry.TeamsLoginResultAcquiringTokenUsingMSALEventName = "PBI.TeamsLoginResult.AcquiringTokenUsingMSAL", 
+        telemetry.TeamsLoginResultAcquiringTokenUsingMSAL = EventFactories[telemetry.TeamsLoginResultAcquiringTokenUsingMSALEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.TeamsLoginResultAcquiringTokenUsingMSALEventName,
+                baseEvent: telemetry.CustomerAction(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CustomerAction,
+                loggers: telemetry.TeamsLoginResultAcquiringTokenUsingMSALLoggers
+            });
+        }, telemetry.TeamsLoginResultTokenParseErrorEventName = "PBI.TeamsLoginResult.TokenParseError", 
+        telemetry.TeamsLoginResultTokenParseError = EventFactories[telemetry.TeamsLoginResultTokenParseErrorEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.TeamsLoginResultTokenParseErrorEventName,
+                baseEvent: telemetry.CustomerAction(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CustomerAction,
+                loggers: telemetry.TeamsLoginResultTokenParseErrorLoggers
+            });
+        }, telemetry.TeamsLoginResultNoTokenEventName = "PBI.TeamsLoginResult.NoToken", 
+        telemetry.TeamsLoginResultNoToken = EventFactories[telemetry.TeamsLoginResultNoTokenEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.TeamsLoginResultNoTokenEventName,
+                baseEvent: telemetry.CustomerAction(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CustomerAction,
+                loggers: telemetry.TeamsLoginResultNoTokenLoggers
+            });
+        }, telemetry.TeamsLoginResultWrongTokenEventName = "PBI.TeamsLoginResult.WrongToken", 
+        telemetry.TeamsLoginResultWrongToken = EventFactories[telemetry.TeamsLoginResultWrongTokenEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.TeamsLoginResultWrongTokenEventName,
+                baseEvent: telemetry.CustomerAction(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CustomerAction,
+                loggers: telemetry.TeamsLoginResultWrongTokenLoggers
+            });
+        }, telemetry.TeamsLoginResultLoginRedirectErrorEventName = "PBI.TeamsLoginResult.LoginRedirectError", 
+        telemetry.TeamsLoginResultLoginRedirectError = EventFactories[telemetry.TeamsLoginResultLoginRedirectErrorEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.TeamsLoginResultLoginRedirectErrorEventName,
+                baseEvent: telemetry.CustomerAction(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CustomerAction,
+                loggers: telemetry.TeamsLoginResultLoginRedirectErrorLoggers
+            });
+        }, telemetry.TeamsLoginResultHandleRedirectPromiseErrorEventName = "PBI.TeamsLoginResult.HandleRedirectPromiseError", 
+        telemetry.TeamsLoginResultHandleRedirectPromiseError = EventFactories[telemetry.TeamsLoginResultHandleRedirectPromiseErrorEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.TeamsLoginResultHandleRedirectPromiseErrorEventName,
+                baseEvent: telemetry.CustomerAction(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CustomerAction,
+                loggers: telemetry.TeamsLoginResultHandleRedirectPromiseErrorLoggers
+            });
+        }, telemetry.DashboardErrorDialogEventName = "PBI.Dashboard.ErrorDialog", telemetry.DashboardErrorDialog = EventFactories[telemetry.DashboardErrorDialogEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.DashboardErrorDialogEventName,
+                info: __assign({}, parameters),
+                category: powerbi.TelemetryCategory.CriticalError,
+                optionalParameters: [ "errorSource" ],
+                loggers: telemetry.DashboardErrorDialogLoggers
+            });
+        }, telemetry.MobileLandingContinuedToWebEventName = "PBI.MobileLanding.ContinuedToWeb", 
+        telemetry.MobileLandingContinuedToWeb = EventFactories[telemetry.MobileLandingContinuedToWebEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.MobileLandingContinuedToWebEventName,
+                baseEvent: telemetry.CustomerAction(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CustomerAction,
+                loggers: telemetry.MobileLandingContinuedToWebLoggers
+            });
+        }, telemetry.MobileLandingDownloadAppEventName = "PBI.MobileLanding.DownloadApp", 
+        telemetry.MobileLandingDownloadApp = EventFactories[telemetry.MobileLandingDownloadAppEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.MobileLandingDownloadAppEventName,
+                baseEvent: telemetry.CustomerAction(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CustomerAction,
+                loggers: telemetry.MobileLandingDownloadAppLoggers
+            });
+        }, telemetry.DashboardUnhandledAngularExceptionEventName = "PBI.Dashboard.UnhandledAngularException", 
+        telemetry.DashboardUnhandledAngularException = EventFactories[telemetry.DashboardUnhandledAngularExceptionEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.DashboardUnhandledAngularExceptionEventName,
+                baseEvent: telemetry.ErrorWithStackTrace(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CriticalError,
+                loggers: telemetry.DashboardUnhandledAngularExceptionLoggers
+            });
+        }, telemetry.DataExceptionEventName = "PBI.Data.Exception", telemetry.DataException = EventFactories[telemetry.DataExceptionEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.DataExceptionEventName,
+                info: parameters,
+                category: powerbi.TelemetryCategory.CriticalError,
+                loggers: telemetry.DataExceptionLoggers
+            });
+        }, telemetry.VisualExceptionEventName = "PBI.Visual.Exception", telemetry.VisualException = EventFactories[telemetry.VisualExceptionEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.VisualExceptionEventName,
+                info: parameters,
+                category: powerbi.TelemetryCategory.CriticalError,
+                loggers: telemetry.VisualExceptionLoggers
+            });
+        }, telemetry.DashboardUnhandledExceptionEventName = "PBI.Dashboard.UnhandledException", 
+        telemetry.DashboardUnhandledException = EventFactories[telemetry.DashboardUnhandledExceptionEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.DashboardUnhandledExceptionEventName,
+                info: parameters,
+                category: powerbi.TelemetryCategory.CriticalError,
+                loggers: telemetry.DashboardUnhandledExceptionLoggers
+            });
+        }, telemetry.HandledExceptionEventName = "PBI.HandledException", telemetry.HandledException = EventFactories[telemetry.HandledExceptionEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.HandledExceptionEventName,
+                baseEvent: telemetry.ErrorWithStackTrace(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CriticalError,
+                loggers: telemetry.HandledExceptionLoggers
+            });
+        }, telemetry.DashboardReportTilePopulateExceptionEventName = "PBI.Dashboard.ReportTilePopulateException", 
+        telemetry.DashboardReportTilePopulateException = EventFactories[telemetry.DashboardReportTilePopulateExceptionEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.DashboardReportTilePopulateExceptionEventName,
+                baseEvent: telemetry.ErrorWithStackTrace(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CriticalError,
+                loggers: telemetry.DashboardReportTilePopulateExceptionLoggers
+            });
+        }, telemetry.DashboardUnhandledStacklessExceptionEventName = "PBI.Dashboard.UnhandledStacklessException", 
+        telemetry.DashboardUnhandledStacklessException = EventFactories[telemetry.DashboardUnhandledStacklessExceptionEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.DashboardUnhandledStacklessExceptionEventName,
+                info: parameters,
+                category: powerbi.TelemetryCategory.CriticalError,
+                loggers: telemetry.DashboardUnhandledStacklessExceptionLoggers,
+                logRatio: 1e-4
+            });
+        }, telemetry.VisualErrorEventName = "PBI.Visual.Error", telemetry.VisualError = EventFactories[telemetry.VisualErrorEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.VisualErrorEventName,
+                info: parameters,
+                category: powerbi.TelemetryCategory.CriticalError,
+                loggers: telemetry.VisualErrorLoggers
+            });
+        }, telemetry.WFEReopenUserAccountEventName = "PBI.WFE.ReopenUserAccount", telemetry.WFEReopenUserAccount = EventFactories[telemetry.WFEReopenUserAccountEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.WFEReopenUserAccountEventName,
+                baseEvent: telemetry.CustomerAction(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CustomerAction,
+                loggers: telemetry.WFEReopenUserAccountLoggers
+            });
+        }, telemetry.WFEAccountClosedPageEventName = "PBI.WFE.AccountClosedPage", telemetry.WFEAccountClosedPage = EventFactories[telemetry.WFEAccountClosedPageEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.WFEAccountClosedPageEventName,
+                baseEvent: telemetry.CustomerAction(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CustomerAction,
+                loggers: telemetry.WFEAccountClosedPageLoggers
+            });
+        }, telemetry.VisualWarningEventName = "PBI.Visual.Warning", telemetry.VisualWarning = EventFactories[telemetry.VisualWarningEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.VisualWarningEventName,
+                baseEvent: telemetry.Verbose(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.Verbose,
+                loggers: telemetry.VisualWarningLoggers
+            });
+        }, telemetry.VisualApiUsageEventName = "PBI.Visual.ApiUsage", telemetry.VisualApiUsage = EventFactories[telemetry.VisualApiUsageEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.VisualApiUsageEventName,
+                baseEvent: telemetry.VerboseTimedEvent(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.Verbose,
+                loggers: telemetry.VisualApiUsageLoggers
+            });
+        }, telemetry.EXCopyActionClickedEventName = "PBI.EX.CopyActionClicked", telemetry.EXCopyActionClicked = EventFactories[telemetry.EXCopyActionClickedEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.EXCopyActionClickedEventName,
+                baseEvent: telemetry.CustomerAction(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.CustomerAction,
+                loggers: telemetry.EXCopyActionClickedLoggers
+            });
+        }, telemetry.StartActivityEventName = "StartActivity", telemetry.StartActivity = EventFactories[telemetry.StartActivityEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.StartActivityEventName,
+                baseEvent: telemetry.Verbose(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.Verbose,
+                loggers: telemetry.StartActivityLoggers
+            });
+        }, telemetry.EndActivityEventName = "EndActivity", telemetry.EndActivity = EventFactories[telemetry.EndActivityEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.EndActivityEventName,
+                baseEvent: telemetry.Verbose(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.Verbose,
+                loggers: telemetry.EndActivityLoggers
+            });
+        }, telemetry.AppSignInErrorEventName = "PBI.App.SignInError", telemetry.AppSignInError = EventFactories[telemetry.AppSignInErrorEventName] = function(parameters) {
+            return telemetryEventFactory({
+                name: telemetry.AppSignInErrorEventName,
+                baseEvent: telemetry.Verbose(parameters),
+                info: parameters,
+                category: powerbi.TelemetryCategory.Verbose,
+                loggers: telemetry.AppSignInErrorLoggers
+            });
+        };
+    }(powerbi.telemetry || (powerbi.telemetry = {}));
+}(powerbi = powerbi || {}), function(powerbi) {
+    var EnumExtensions = jsCommon.EnumExtensions;
+    function handleActivity(activity, error) {
+        activity && (error ? activity.reject(error) : activity.resolve());
+    }
+    powerbi.MonitorWith = function(eventName, activityAction, activityMode) {
+        return void 0 === activityAction && (activityAction = 3), void 0 === activityMode && (activityMode = 0), 
+        function(target, propertyKey, descriptor) {
+            var originalMethod = descriptor.value;
+            return descriptor.value = function() {
+                for (var _this = this, args = [], _i = 0; _i < arguments.length; _i++) args[_i] = arguments[_i];
+                _.isEmpty(eventName);
+                for (var currentWindow = jsCommon.WindowUtils.GetWindowObject(); !(currentWindow == window.top || currentWindow.featureSwitchService && currentWindow.telemetryService); ) currentWindow = currentWindow.parent;
+                var result, currentZone = currentWindow.featureSwitchService, telemetryService = currentWindow.telemetryService, zoneData = !1;
+                if (zoneData = !(currentZone && currentZone.isFeatureSwitchesRegistered() && currentZone.featureSwitches && currentZone.featureSwitches.telemetryV2 && telemetryService) ? !0 : zoneData) return result = originalMethod.apply(this, args);
+                var currentZone = Zone && Zone.current, zoneData = currentZone && currentZone.get("data"), activity = zoneData && zoneData.monitoredActivity;
+                EnumExtensions.hasFlag(activityAction, 1) && (currentZone = (activity = telemetryService.startMonitoredActivity(activity, eventName, {
+                    baseVersion: "v2",
+                    isFireAndForget: 1 === activityMode || void 0
+                })).currentZone);
+                try {
+                    currentZone.run(function() {
+                        return result = originalMethod.apply(_this, args);
+                    });
+                } catch (error) {
+                    if (EnumExtensions.hasFlag(activityAction, 2)) return void handleActivity(activity, error);
+                    throw error;
+                }
+                return EnumExtensions.hasFlag(activityAction, 2) && (currentZone.name, result && _.isObject(result) && result.then && _.isFunction(result.then) ? result.then(function() {
+                    handleActivity(activity);
+                }, function(reason) {
+                    handleActivity(activity, reason);
+                }) : handleActivity(activity)), result;
+            }, descriptor;
+        };
+    };
+}(powerbi = powerbi || {}), function(powerbi) {
+    !function(errorDetailsHelper) {
+        function getTelemetryErrorDetails(exceptionCulprit, httpStatusCode) {
+            if (exceptionCulprit && exceptionCulprit.code) {
+                var errorCode = exceptionCulprit.code, exceptionCulprit = exceptionCulprit["pbi.error"] && exceptionCulprit["pbi.error"].exceptionCulprit;
+                return null != exceptionCulprit ? {
+                    errorCode: errorCode,
+                    errorSource: function(exceptionCulprit) {
+                        switch (exceptionCulprit) {
+                          case 2:
+                            return "External";
+
+                          case 1:
+                            return "User";
+
+                          default:
+                            return "PowerBI";
+                        }
+                    }(exceptionCulprit)
+                } : null == httpStatusCode || 401 !== httpStatusCode && 403 !== httpStatusCode ? {
+                    errorCode: errorCode,
+                    errorSource: "PowerBI"
+                } : {
+                    errorCode: errorCode,
+                    errorSource: "User"
+                };
+            }
+            if (null != httpStatusCode) return {
+                errorCode: "HttpStatusCode = " + httpStatusCode,
+                errorSource: "PowerBI"
+            };
+        }
+        function getTelemetryErrorSourceFromExceptionCulpritString(culprit) {
+            switch (culprit) {
+              case powerbi.ExceptionCulpritExternal:
+                return "External";
+
+              case powerbi.ExceptionCulpritUser:
+                return "User";
+
+              default:
+                powerbi.ExceptionCulpritSystem;
+                return "PowerBI";
+            }
+        }
+        errorDetailsHelper.getErrorSource = function(exceptionCulprit) {
+            switch (exceptionCulprit) {
+              case 2:
+                return "External";
+
+              case 1:
+                return "User";
+
+              default:
+                return "PowerBI";
+            }
+        }, errorDetailsHelper.getTelemetryErrorDetailsWithResourceKey = function(error, resourceKey, details) {
+            return (details = getTelemetryErrorDetails(error, details)) && (details.errorMessage = resourceKey), 
+            details;
+        }, errorDetailsHelper.getTelemetryErrorDetailsWithErrorMessage = function(error, details) {
+            return (details = getTelemetryErrorDetails(error, details)) && (details.errorMessage = error.message), 
+            details;
+        }, errorDetailsHelper.getTelemetryErrorDetails = getTelemetryErrorDetails, errorDetailsHelper.getTelemetryErrorDetailsFromHttpStatus = function(telemetryErrorDetails, httpStatusCode) {
+            if (telemetryErrorDetails = getTelemetryErrorDetails(telemetryErrorDetails, httpStatusCode)) return null == httpStatusCode || 400 !== httpStatusCode && 401 !== httpStatusCode && 403 !== httpStatusCode && 429 !== httpStatusCode && 404 !== httpStatusCode || (telemetryErrorDetails.errorSource = "User"), 
+            telemetryErrorDetails;
+        }, errorDetailsHelper.getTelemetryErrorDetailsFromServiceError = function(error) {
+            if (error) return {
+                errorCode: error.errorCode,
+                errorMessage: "StatusCode=" + error.statusCode,
+                errorSource: null != error.exceptionCulprit ? getTelemetryErrorSourceFromExceptionCulpritString(error.exceptionCulprit) : void 0
+            };
+        }, errorDetailsHelper.getErrorCode = function(errorResponse) {
+            if (errorResponse) return errorResponse.error ? errorResponse.error.code : errorResponse.status ? errorResponse.status.toString() : void 0;
+        }, errorDetailsHelper.getTelemetryErrorSourceFromExceptionCulpritString = getTelemetryErrorSourceFromExceptionCulpritString;
+    }(powerbi.errorDetailsHelper || (powerbi.errorDetailsHelper = {}));
+}(powerbi = powerbi || {}), function(jsCommon) {
+    !function(ArrayExtensions) {
+        ArrayExtensions.comparableSequenceEqual = function(array1, array2) {
+            if (!array1 && !array2) return !0;
+            if (!!array1 != !!array2 || array1.length !== array2.length) return !1;
+            for (var i = 0, len = array1.length; i < len; i++) if (!array1[i].equals(array2[i])) return !1;
+            return !0;
+        };
+    }(jsCommon.ArrayExtensions || (jsCommon.ArrayExtensions = {}));
+}(jsCommon = jsCommon || {}), function(contextActivity) {
+    function getAncestorActivityProperties(predicate, properties) {
+        for (;properties; ) {
+            if (predicate(properties)) return properties;
+            properties = properties.parent;
+        }
+    }
+    contextActivity.isOpenReportActivity = function(activity) {
+        return !!activity && "Open Report" === activity.getProperty("name");
+    }, contextActivity.getAncestorActivityPropertiesOfEvent = function(predicate, performanceActivity) {
+        return performanceActivity && getAncestorActivityProperties(predicate, performanceActivity.getProperty("parent"));
+    }, contextActivity.getAncestorActivityProperties = getAncestorActivityProperties;
+}(contextActivity = contextActivity || {}), function(powerbi) {
+    !function(session) {
+        function getUserInfo() {
+            return powerbi.ensurePowerbiSession().userInfo;
+        }
+        session.getUserInfo = getUserInfo, session.setUserInfo = function(userInfo) {
+            powerbi.ensurePowerbiSession().userInfo = userInfo;
+        };
+        var UserInfoUtils = function() {
+            function UserInfoUtils() {}
+            return UserInfoUtils.getFullName = function() {
+                var userInfo = getUserInfo();
+                return userInfo.givenName + " " + userInfo.surname;
+            }, UserInfoUtils.isInternalUser = function() {
+                var lowerUserName = getUserInfo();
+                if (!lowerUserName || !lowerUserName.name) return !1;
+                lowerUserName = lowerUserName.name.toLowerCase();
+                return 0 <= lowerUserName.indexOf("@microsoft.com") || 0 <= lowerUserName.indexOf(".microsoft.com");
+            }, UserInfoUtils.getUPN = function() {
+                return getUserInfo().name;
+            }, UserInfoUtils.getEmailAddressForReceivingMail = function() {
+                var userInfo = getUserInfo();
+                return null == userInfo ? "" : _.isEmpty(userInfo.alternateEmail) ? userInfo.name : userInfo.alternateEmail;
+            }, UserInfoUtils;
+        }();
+        session.UserInfoUtils = UserInfoUtils;
+    }(powerbi.session || (powerbi.session = {}));
+}(powerbi = powerbi || {}), function(powerbi) {
+    function exportTelemetryWFEErrorToGlobal() {
+        var WFEError;
+        exported || (WFEError = powerbi.telemetry.WFEError, powerbi.ensurePowerbiTelemetry().WFEError = function(parameters) {
+            return WFEError(parameters);
+        }, exported = !0);
+    }
+    function exportTelemetrySignInErrorToGlobal() {
+        var AppSignInError;
+        exported || (AppSignInError = powerbi.telemetry.AppSignInError, powerbi.ensurePowerbiTelemetry().AppSignInError = function(parameters) {
+            return AppSignInError(parameters);
+        }, exported = !0);
+    }
+    !function(telemetryConstants) {
+        telemetryConstants.pbiClientName = "PowerBI.com", telemetryConstants.httpActivityIdHeader = "ActivityId", 
+        telemetryConstants.httpRequestIdHeader = "RequestId";
+    }(powerbi.telemetryConstants || (powerbi.telemetryConstants = {})), powerbi.exportTelemetryWFEErrorToGlobal = exportTelemetryWFEErrorToGlobal, 
+    powerbi.exportTelemetrySignInErrorToGlobal = exportTelemetrySignInErrorToGlobal;
+    var exported = !1;
+    exportTelemetryWFEErrorToGlobal(), exportTelemetrySignInErrorToGlobal();
+}(powerbi = powerbi || {}), function(InJs) {
+    !function(UnlocalizedStrings) {
+        UnlocalizedStrings.infoNavErrorCodeTemplate = "{0} ({1})", UnlocalizedStrings.errorCodeText = "Error Code", 
+        UnlocalizedStrings.errorActivityIdText = "Activity Id", UnlocalizedStrings.errorRequestIdText = "Request Id", 
+        UnlocalizedStrings.correlationIdText = "Correlation Id", UnlocalizedStrings.errorLineNumberText = "Line number", 
+        UnlocalizedStrings.errorColumnNumberText = "Column number", UnlocalizedStrings.errorStackTraceText = "Stack trace", 
+        UnlocalizedStrings.errorSourceFileText = "Source file", UnlocalizedStrings.errorTimestampText = "Time", 
+        UnlocalizedStrings.showDetailsText = "Show technical details", UnlocalizedStrings.dialogCloseActionLabel = "Close", 
+        UnlocalizedStrings.dialogRefreshPageActionLabel = "Refresh Page", UnlocalizedStrings.errorDialogTitle = "oops, something went wrong", 
+        UnlocalizedStrings.unsupportedBrowserMessageTitle = "Unsupported browser detected", 
+        UnlocalizedStrings.unsupportedBrowserMessageText = "Power BI Q&A requires Internet Explorer 10 or higher, please upgrade your browser and try again", 
+        UnlocalizedStrings.errorDialogHelperText = "Please try again later or contact support. If you contact support, please provide these details.", 
+        UnlocalizedStrings.CopyActionLabel = "Copy", UnlocalizedStrings.SuccessActionLabel = "Success!";
+    }(InJs.UnlocalizedStrings || (InJs.UnlocalizedStrings = {}));
+}(InJs = InJs || {}), function(jsCommon) {
+    !function(BrowserUtility) {
+        function browserSupportsEssentials() {
+            return supportsDefineProperty();
+        }
+        function isEdgeBrowser() {
+            return -1 < window.navigator.userAgent.toLowerCase().indexOf("edge/");
+        }
+        function supportsDefineProperty() {
+            if (!Object.defineProperty) return !1;
+            try {
+                return Object.defineProperty({}, "customProperty", {
+                    get: function() {
+                        return !0;
+                    },
+                    enumerable: !0,
+                    configurable: !1
+                }), !0;
+            } catch (e) {
+                return !1;
+            }
+        }
+        BrowserUtility.isBrowserSupported = function() {
+            return supportsDefineProperty() && !!Function.prototype.bind && !!$.support.cors;
+        }, BrowserUtility.browserSupportsEssentials = browserSupportsEssentials, BrowserUtility.isInternetExplorerBrowser = function() {
+            var agent = window.navigator.userAgent.toLowerCase();
+            return -1 < agent.indexOf("msie ") || -1 < agent.indexOf("trident/");
+        }, BrowserUtility.isEdgeBrowser = isEdgeBrowser, BrowserUtility.isSafari = function() {
+            return /^((?!chrome|android).)*safari/i.test(window.navigator.userAgent);
+        }, BrowserUtility.isChrome = function() {
+            return !isEdgeBrowser() && / chrome\/([0-9]+)(\.[0-9]+)+/i.test(window.navigator.userAgent);
+        }, BrowserUtility.isFirefox = function() {
+            return / firefox\/([0-9]+)(\.[0-9]+)+/i.test(window.navigator.userAgent);
+        }, BrowserUtility.getInternetExplorerVersion = function() {
+            var result, retValue = 0;
+            return !("Microsoft Internet Explorer" === navigator.appName || 0 <= window.navigator.userAgent.indexOf("MSIE")) || (result = new RegExp("MSIE ([0-9]{1,}[\\.0-9]{0,})").exec(window.navigator.userAgent)) && (retValue = parseFloat(result[1])), 
+            retValue;
+        };
+    }(jsCommon.BrowserUtility || (jsCommon.BrowserUtility = {}));
+}(jsCommon = jsCommon || {}), function(jsCommon) {
+    !function(CookieUtil) {
+        CookieUtil.getCookie = function(key, window) {
+            if (window && window.document && window.document.cookie) for (var _i = 0, keyValuePairs_1 = window.document.cookie.split(";"); _i < keyValuePairs_1.length; _i++) {
+                var split = keyValuePairs_1[_i].split("=");
+                if (0 < split.length && split[0].trim() === key) return split[1];
+            }
+        }, CookieUtil.setCookie = function(key, value, window) {
+            window && window.document && (window.document.cookie = key + " = " + value + ";secure");
+        };
+    }(jsCommon.CookieUtil || (jsCommon.CookieUtil = {}));
+}(jsCommon = jsCommon || {}), function(jsCommon) {
+    var DragDropDataKeys, ExplorationContainer = jsCommon.CssConstants.createClassAndSelector("explorationContainer");
+    !function(DropPosition) {
+        DropPosition.isAbove = function(position) {
+            return !!(1 & position);
+        }, DropPosition.isRightOf = function(position) {
+            return !!(2 & position);
+        }, DropPosition.isBelow = function(position) {
+            return !!(4 & position);
+        }, DropPosition.isLeftOf = function(position) {
+            return !!(8 & position);
+        }, DropPosition.isVerticalMiddle = function(position) {
+            return !!(16 & position);
+        }, DropPosition.isHorizontalMiddle = function(position) {
+            return !!(32 & position);
+        };
+    }(jsCommon.DropPosition || (jsCommon.DropPosition = {})), function(HighlightClasses) {
+        HighlightClasses.None = jsCommon.CssConstants.createClassAndSelector("notDroppable"), 
+        HighlightClasses.Replace = jsCommon.CssConstants.createClassAndSelector("dropover"), 
+        HighlightClasses.Prepend = jsCommon.CssConstants.createClassAndSelector("prepend"), 
+        HighlightClasses.Append = jsCommon.CssConstants.createClassAndSelector("append");
+    }(jsCommon.HighlightClasses || (jsCommon.HighlightClasses = {})), function(DragDropUtils) {
+        DragDropUtils.DragoverClass = "dragover", DragDropUtils.DragAttribute = "drag", 
+        DragDropUtils.getDragSourceType = function(dragSource) {
+            return dragSource.attr(DragDropUtils.DragAttribute);
+        }, DragDropUtils.prepareDragHelper = function(clone) {
+            return (clone = clone.clone()).find("[id]").removeAttr(jsCommon.DOMConstants.idAttribute), 
+            clone.addClass("dragHelper"), clone;
+        }, DragDropUtils.getElementToAppendDragHelper = function(appendToElement) {
+            return (appendToElement = appendToElement.parents(ExplorationContainer.selector)).length, 
+            appendToElement;
+        }, DragDropUtils.tryFindChildDropTarget = function(draggable, target) {
+            return (target = target()) ? (draggable.data[DragDropDataKeys.DropTarget] = target, 
+            !0) : !(draggable.data[DragDropDataKeys.DropEventHandled] = !0);
+        }, DragDropUtils.isDropOnExpectedTarget = function(draggable, expectedTarget) {
+            return !draggable.data[DragDropDataKeys.DropEventHandled] && draggable.data[DragDropDataKeys.DropTarget] === expectedTarget && (draggable.data[DragDropDataKeys.DropEventHandled] = !0);
+        }, DragDropUtils.getDropPosition = function(dropPosition, mouseLeft) {
+            var height = mouseLeft.height(), width = mouseLeft.width(), elementOffset = mouseLeft.offset(), mouseTop = dropPosition.pageY, mouseLeft = dropPosition.pageX, dropPosition = 0;
+            return elementOffset.top + height / 2 > mouseTop ? dropPosition |= 1 : dropPosition |= 4, 
+            elementOffset.left + width / 2 > mouseLeft ? dropPosition |= 8 : dropPosition |= 2, 
+            elementOffset.top + height / 3 < mouseTop && elementOffset.top + height / 3 * 2 > mouseTop && (dropPosition |= 16), 
+            elementOffset.left + width / 3 < mouseLeft && elementOffset.left + width / 3 * 2 > mouseLeft && (dropPosition |= 32), 
+            dropPosition;
+        }, DragDropUtils.isValidDropLocation = function(dragType, validDrops) {
+            return !dragType || (dragType = DragDropUtils.getDragSourceType(dragType), 0 <= validDrops.indexOf(dragType));
+        };
+    }(jsCommon.DragDropUtils || (jsCommon.DragDropUtils = {})), function(DragDropDataKeys) {
+        DragDropDataKeys.DragScrollHandler = "DragScrollHandler", DragDropDataKeys.DropEventHandled = "DropEventHandled", 
+        DragDropDataKeys.DropTarget = "DropTarget";
+    }(DragDropDataKeys = jsCommon.DragDropDataKeys || (jsCommon.DragDropDataKeys = {}));
+}(jsCommon = jsCommon || {}), function(jsCommon) {
+    !function(HttpUtils) {
+        HttpUtils.clientAndServerRequestIdMatch = function(result) {
+            return result && result.requestId && result.responseRequestId ? result.requestId === result.responseRequestId : null;
+        }, HttpUtils.getResponseRequestId = function(result) {
+            return result && result.responseRequestId ? result.responseRequestId : null;
+        }, HttpUtils.shouldRetryRequest = function(statusCode) {
+            switch (statusCode) {
+              case 401:
+              case 403:
+              case 413:
+              case 400:
+              case 404:
+              case 409:
+              case 412:
+              case 422:
+              case 415:
+                return !1;
+
+              default:
+                return !0;
+            }
+        }, HttpUtils.isServerError = function(statusCode) {
+            switch (statusCode) {
+              case 500:
+              case 503:
+                return !0;
+
+              default:
+                return !1;
+            }
+        };
+    }(jsCommon.HttpUtils || (jsCommon.HttpUtils = {}));
+}(jsCommon = jsCommon || {}), function(InJs) {
+    InJs.RtlDirAttrVal = "rtl", function(InfoNavUtility) {
+        var infoNavErrorInfoFieldTemplate = '<div class="infonav-errorInfoItem"><span class="infonav-errorInfoHeader">{FieldTitle}</span><span class="infonav-errorInfoText">{FieldValue}</span></div>';
+        InfoNavUtility.constructShowDetailsContainer = function(additionalErrorInfo, localizedString) {
+            var additionalErrorInfoContainer = $("<div ></div>"), showDetailsLink = $("<a class=\"showAdditionalDetailsLink\" href='javascript:' ></a>");
+            return showDetailsLink.addClass("infonav-showAdditionalError"), showDetailsLink.text(localizedString || InJs.UnlocalizedStrings.showDetailsText), 
+            showDetailsLink.on(jsCommon.DOMConstants.mouseClickEventName, function() {
+                additionalErrorInfoContainer.find(jsCommon.Utility.createClassSelector("infonav-showAdditionalError")).remove(), 
+                additionalErrorInfoContainer.find(jsCommon.Utility.createClassSelector("infonav-additionalError")).css(jsCommon.CssConstants.displayProperty, jsCommon.CssConstants.blockValue);
+            }), additionalErrorInfo.css(jsCommon.CssConstants.displayProperty, jsCommon.CssConstants.noneValue), 
+            additionalErrorInfo.addClass("infonav-additionalError"), additionalErrorInfoContainer.append(showDetailsLink), 
+            additionalErrorInfoContainer.append(additionalErrorInfo), additionalErrorInfoContainer;
+        }, InfoNavUtility.constructErrorField = function(retValue, fieldValue) {
+            return (retValue = $(infoNavErrorInfoFieldTemplate.replace("{FieldTitle}", retValue))).find(".infonav-errorInfoText").multiline(fieldValue || ""), 
+            retValue;
+        }, InfoNavUtility.isRTL = function() {
+            return $("html").attr("dir") === InJs.RtlDirAttrVal;
+        };
+    }(InJs.InfoNavUtility || (InJs.InfoNavUtility = {}));
+}(InJs = InJs || {}), function(jsCommon) {
+    !function(JsonExtensions) {
+        JsonExtensions.tryParseJSON = function(jsonString, reviver, logExceptions) {
+            try {
+                return JSON.parse(jsonString, reviver);
+            } catch (ex) {}
+        }, JsonExtensions.isJsonString = function(jsonString) {
+            if (jsonString && "string" == typeof jsonString) {
+                try {
+                    JSON.parse(jsonString);
+                } catch (e) {
+                    return !1;
+                }
+                return !0;
+            }
+            return !1;
+        };
+    }(jsCommon.JsonExtensions || (jsCommon.JsonExtensions = {}));
+}(jsCommon = jsCommon || {}), function(jsCommon) {
+    !function(MathExtensions) {
+        MathExtensions.min = function(number1, number2) {
+            return null == number1 || isNaN(number1) ? number2 : null == number2 || isNaN(number2) ? number1 : Math.min(number1, number2);
+        }, MathExtensions.max = function(number1, number2) {
+            return null == number1 || isNaN(number1) ? number2 : null == number2 || isNaN(number2) ? number1 : Math.max(number1, number2);
+        };
+    }(jsCommon.MathExtensions || (jsCommon.MathExtensions = {}));
+}(jsCommon = jsCommon || {}), function(powerbi) {
+    powerbi.ThemePrecedenceList = [ "highContrastTheme", "customTheme", "baseTheme" ], 
+    powerbi.getThemeMetadata = function(name, type, version) {
+        return {
+            name: name,
+            version: version,
+            type: type
+        };
+    };
+}(powerbi = powerbi || {}), function(jsCommon) {
+    !function(iFrameUtility) {
+        iFrameUtility.isHostedInIFrame = function() {
+            try {
+                return window.self !== window.top;
+            } catch (e) {
+                return !0;
+            }
+        }, iFrameUtility.isHostedInCrossDomainIFrame = function() {
+            var parentOrigin;
+            try {
+                parentOrigin = window.parent.origin;
+            } catch (e) {
+                parentOrigin = "blockedBecauseCrossOrigin";
+            }
+            return window.origin !== parentOrigin;
+        }, iFrameUtility.getHostName = function(url) {
+            if (url && "" !== url.trim()) {
+                var elem = document.createElement("a");
+                return elem.href = url, elem.hostname;
+            }
+            return "";
+        };
+    }(jsCommon.iFrameUtility || (jsCommon.iFrameUtility = {})), function(GzipUtility) {
+        GzipUtility.uncompress = function(encoded) {
+            if (encoded) try {
+                var decoded = atob(encoded);
+                return pako.inflate(decoded, {
+                    to: "string"
+                });
+            } catch (e) {
+                jsCommon.Trace.error("Error while uncompressing TileData: " + JSON.stringify(e), null == e.stack);
+            }
+            return null;
+        }, GzipUtility.compress = function(data) {
+            if (data) try {
+                var compressed = pako.gzip(data, {
+                    to: "string"
+                });
+                return btoa(compressed);
+            } catch (e) {
+                jsCommon.Trace.error("Error while compressing data: " + JSON.stringify(e), null == e.stack);
+            }
+            return null;
+        };
+    }(jsCommon.GzipUtility || (jsCommon.GzipUtility = {})), function(E2EUtils) {
+        var isE2EV2;
+        E2EUtils.isE2EV2Run = function() {
+            return isE2EV2 = null == isE2EV2 ? !!jsCommon.QueryStringUtil.getQueryStringValue("isE2ERun2") : isE2EV2;
+        };
+    }(jsCommon.E2EUtils || (jsCommon.E2EUtils = {})), function(WindowUtils) {
+        WindowUtils.GetWindowObject = function() {
+            return window;
+        };
+    }(jsCommon.WindowUtils || (jsCommon.WindowUtils = {}));
+}(jsCommon = jsCommon || {}), function(jsCommon) {
+    !function(FocusNavigationUtility) {
+        function contains(parent, child) {
+            return 0 != (child.compareDocumentPosition(parent) & Node.DOCUMENT_POSITION_CONTAINS);
+        }
+        function getFirstMatchingAncestor(element, matcher, root, includeSelf) {
+            void 0 === includeSelf && (includeSelf = !0);
+            var currentElement = element;
+            if (currentElement !== (root = root || document.body) || includeSelf && matcher(currentElement)) for (!includeSelf && element && (currentElement = currentElement.parentElement || currentElement.parentNode || void 0); currentElement && currentElement !== document.body && currentElement.nodeType === Node.ELEMENT_NODE; ) {
+                if (matcher(currentElement)) return currentElement;
+                if (currentElement === root) break;
+                currentElement = currentElement.parentElement || currentElement.parentNode || void 0;
+            }
+        }
+        function isElementTabbable(element) {
+            return !0 === $(element).is(":tabbable");
+        }
+        function getTabbableParent(element, root) {
+            return getFirstMatchingAncestor(element, isElementTabbable, root = root || document.body, !1);
+        }
+        function getTabbableDescendants(element) {
+            return $(element).find(":tabbable").get();
+        }
+        function getTabbableChildren(element) {
+            return _.filter(getTabbableDescendants(element), function(descendent) {
+                return !$.contains(element, getTabbableParent(descendent, element));
+            });
+        }
+        function getTabbableSiblingsMatch(element, siblingMatcher, siblings) {
+            void 0 === siblings && (siblings = document.body);
+            siblings = FocusNavigationUtility.getTabbableSiblings(element, siblings);
+            return _.filter(siblings, siblingMatcher);
+        }
+        function getTabbableSiblings(element, root) {
+            var parent = getTabbableParent(element, root = root || document.body);
+            if (parent = !parent || root && $.contains(parent, root) ? root : parent) {
+                for (var siblings = [], insertPointer = 0, _i = 0, children_1 = getTabbableChildren(parent); _i < children_1.length; _i++) {
+                    var child = children_1[_i];
+                    child === element || contains(element, child) ? insertPointer = 0 : siblings.splice(insertPointer++, 0, child);
+                }
+                return siblings;
+            }
+            return [];
+        }
+        FocusNavigationUtility.isElementContentEditable = function(element) {
+            return 0 < $(element).closest("[contentEditable]").length;
+        }, FocusNavigationUtility.isTextElement = function(element) {
+            if ($(element).is(":disabled")) return !1;
+            var nodeName = element.nodeName.toLowerCase();
+            return element.nodeType === Node.ELEMENT_NODE && ("textarea" === nodeName || "select" === nodeName || "input" === nodeName && /^(?:text|email|number|search|tel|url|password)$/i.test(element.type));
+        }, FocusNavigationUtility.contains = contains, FocusNavigationUtility.getFirstMatchingAncestor = getFirstMatchingAncestor, 
+        FocusNavigationUtility.isElementTabbable = isElementTabbable, FocusNavigationUtility.getTabbableParent = getTabbableParent, 
+        FocusNavigationUtility.getFirstTabbableChild = function(element) {
+            return getTabbableChildren(element)[0];
+        }, FocusNavigationUtility.getTabbableDescendants = getTabbableDescendants, FocusNavigationUtility.getTabbableChildren = getTabbableChildren, 
+        FocusNavigationUtility.getTabbableSiblingsMatch = getTabbableSiblingsMatch, FocusNavigationUtility.getNextTabbableMatchingSibling = function(element, siblingMatcher, siblings) {
+            if (0 < (siblings = getTabbableSiblingsMatch(element, siblingMatcher, siblings = siblings || document.body)).length) return siblings[0];
+        }, FocusNavigationUtility.getPrevTabbableMatchingSibling = function(element, siblingMatcher, siblings) {
+            if (0 < (siblings = getTabbableSiblingsMatch(element, siblingMatcher, siblings = siblings || document.body)).length) return siblings[siblings.length - 1];
+        }, FocusNavigationUtility.getTabbableSiblings = getTabbableSiblings, FocusNavigationUtility.getNextTabbableSibling = function(element, root) {
+            return getTabbableSiblings(element, root = root || document.body)[0];
+        }, FocusNavigationUtility.getPrevTabbableSibling = function(element, siblings) {
+            return (siblings = getTabbableSiblings(element, siblings = siblings || document.body))[siblings.length - 1];
+        }, FocusNavigationUtility.isElementVisible = function(element) {
+            return $(element).is(":visible");
+        }, FocusNavigationUtility.getParentFocusElement = function(element) {
+            return $(element).parents(":tabbable:first").get(0);
+        };
+    }(jsCommon.FocusNavigationUtility || (jsCommon.FocusNavigationUtility = {}));
+}(jsCommon = jsCommon || {}), function(jsCommon) {
+    jsCommon.FocusManagerFocusEventName = "focusManager_focus", jsCommon.FocusManagerFocusOnEventName = "focusManager_focusOn", 
+    jsCommon.isTabbable = function(element) {
+        return !0 === $(element).is(":tabbable") && !1 === $(element).is(":disabled");
+    }, jsCommon.FocusNavModeAttribute = "focus-nav-mode", jsCommon.TabOrderEnabledAttribute = "tab-order-enabled", 
+    jsCommon.TabOrderRecursiveEnabledAttribute = "tab-order-recursive-enabled", jsCommon.TabOrderAttribute = "tab-order", 
+    jsCommon.TabOrderChildAttribute = "tab-order-child", jsCommon.TabIndexAttribute = "tabindex", 
+    jsCommon.SkipArrowNavigationAttribute = "skip-arrow-navigation", jsCommon.FocusNavModeGroupMatcher = "[" + jsCommon.FocusNavModeAttribute + '="Group"]:first', 
+    jsCommon.FocusNavModeHierarchicalTabOrderMatcher = "[" + jsCommon.FocusNavModeAttribute + '="HierarchicalTabOrder"]:first';
+    var FocusManager = function() {
+        function FocusManager() {
+            this.registeredElements = [], this.shortcutContainer = new jsCommon.ShortcutContainer();
+        }
+        return Object.defineProperty(FocusManager.prototype, "keyboardFocused", {
+            get: function() {
+                return FocusManager.keyboardFocused;
+            },
+            set: function(value) {
+                FocusManager.keyboardFocused = value;
+            },
+            enumerable: !1,
+            configurable: !0
+        }), FocusManager.getInstance = function() {
+            return this._instance || (this._instance = new FocusManager());
+        }, FocusManager.prototype.register = function(container, isolate, disableCaptureTabFocusInsideGroup) {
+            var _this = this;
+            void 0 === isolate && (isolate = !1);
+            var navModes = [ new jsCommon.FocusGroupNavigation(disableCaptureTabFocusInsideGroup = void 0 === disableCaptureTabFocusInsideGroup ? !1 : disableCaptureTabFocusInsideGroup), new jsCommon.HierarchicalNavigation(), new jsCommon.HierarchicalTabOrderNavigation() ], eventHandler = function(event) {
+                return _this.handleKeyPress(event, isolate, navModes);
+            };
+            _.includes(this.registeredElements, container) || (container.addEventListener("keydown", eventHandler), 
+            this.registeredElements.push(container));
+            var element = _.find(this.registeredElements, container);
+            return function() {
+                element.removeEventListener("keydown", eventHandler), _.pull(_this.registeredElements, container);
+            };
+        }, FocusManager.prototype.registerShortcut = function(shortcut) {
+            this.shortcutContainer.add(shortcut);
+        }, FocusManager.prototype.unregisterShortcut = function(shortcut) {
+            this.shortcutContainer.remove(shortcut);
+        }, FocusManager.focusChildInGroup = function(groupElement) {
+            groupElement = "Group" === groupElement.getAttribute(jsCommon.FocusNavModeAttribute) ? groupElement : $(groupElement).find(jsCommon.FocusNavModeGroupMatcher).get(0);
+            groupElement && FocusManager.focus(jsCommon.FocusGroupNavigation.getFocusNextElement(!0, groupElement));
+        }, FocusManager.focusChildInCanvas = function(canvasElement) {
+            canvasElement = "HierarchicalTabOrder" === canvasElement.getAttribute(jsCommon.FocusNavModeAttribute) ? canvasElement : $(canvasElement).find(jsCommon.FocusNavModeHierarchicalTabOrderMatcher)[0];
+            canvasElement && FocusManager.focus(jsCommon.HierarchicalTabOrderNavigation.getFocusNextElement(canvasElement, !0, !0));
+        }, FocusManager.focus = function(element, fromKeyboard) {
+            var currentActiveElement;
+            void 0 === fromKeyboard && (fromKeyboard = !0), element && (currentActiveElement = document.activeElement, 
+            jsCommon.Zone.setTimeout(function() {
+                jsCommon.BrowserUtils.focus(element), $(element).triggerHandler(jsCommon.FocusManagerFocusOnEventName, currentActiveElement), 
+                $(element).trigger(jsCommon.FocusManagerFocusEventName, currentActiveElement), fromKeyboard && (FocusManager.keyboardFocused = !0, 
+                $("html").attr("data-focus-source", "key"));
+            }));
+        }, FocusManager.prototype.focus = function(element, fromKeyboard) {
+            FocusManager.focus(element, fromKeyboard = void 0 === fromKeyboard ? !0 : fromKeyboard);
+        }, FocusManager.prototype.focusOnGroupByIndex = function(keyCode, shift, alt, ctrl, focusPriority) {
+            this.shortcutContainer.handleByPriority(keyCode, shift, alt, ctrl, focusPriority);
+        }, FocusManager.setFocusOnPreviousElementOnDestroy = function(element, onlyUseFirstReturnElement, onlyReturnIfCurrentFocusIsInsideElement) {
+            var returnFocusElement = null;
+            return element.on(jsCommon.FocusManagerFocusEventName, function(event, previousFocus) {
+                event.stopPropagation(), !previousFocus || onlyUseFirstReturnElement && returnFocusElement || $.contains(element[0], previousFocus) || (returnFocusElement = previousFocus);
+            }), function() {
+                var currentActiveElement = document.activeElement;
+                returnFocusElement && $(returnFocusElement).closest(document.documentElement) && (!onlyReturnIfCurrentFocusIsInsideElement || $.contains(element[0], currentActiveElement)) && jsCommon.FocusManager.focus(returnFocusElement, !1);
+            };
+        }, FocusManager.prototype.handleKeyPress = function(event, isolate, navModes) {
+            if (this.handleShortcut(event)) return event.stopPropagation(), void event.preventDefault();
+            var activeElement = document.activeElement;
+            if (activeElement) {
+                for (var elementToFocus, modeRoot = jsCommon.FocusNavigationUtility.getFirstMatchingAncestor(activeElement, function(e) {
+                    return e.hasAttribute(jsCommon.FocusNavModeAttribute);
+                }, document.body); modeRoot && modeRoot !== document.body; ) {
+                    var state_2 = function() {
+                        var modeName = modeRoot.getAttribute(jsCommon.FocusNavModeAttribute);
+                        if ("Browser" === modeName) return {
+                            value: void 0
+                        };
+                        var mode = _.find(navModes, function(m) {
+                            return m.name === modeName;
+                        });
+                        if (elementToFocus = mode && mode.shouldHandleFocus(activeElement, modeRoot) ? mode.findNextElementToFocus(activeElement, event, modeRoot) : elementToFocus) return "break";
+                        modeRoot = jsCommon.FocusNavigationUtility.getFirstMatchingAncestor(modeRoot, function(e) {
+                            return e.hasAttribute(jsCommon.FocusNavModeAttribute);
+                        }, document.body, !1);
+                    }();
+                    if ("object" == typeof state_2) return state_2.value;
+                    if ("break" === state_2) break;
+                }
+                elementToFocus && FocusManager.focus(elementToFocus), isolate && event.stopPropagation(), 
+                elementToFocus && 13 !== event.keyCode && 32 !== event.keyCode && (event.stopPropagation(), 
+                event.preventDefault());
+            }
+        }, FocusManager.prototype.handleShortcut = function(event) {
+            return this.shortcutContainer.handle(event);
+        }, FocusManager.prototype.focusNextElement = function(element) {
+            FocusManager.focus(jsCommon.FocusGroupNavigation.getFocusNextElement(!0, element));
+        }, FocusManager.keyboardFocused = !1, FocusManager;
+    }();
+    jsCommon.FocusManager = FocusManager;
+}(jsCommon = jsCommon || {}), function(jsCommon) {
+    var DomOrderFocusFinder = function() {
+        function DomOrderFocusFinder(focusNavMode) {
+            this.focusNavMode = focusNavMode = void 0 === focusNavMode ? "Group" : focusNavMode;
+        }
+        return DomOrderFocusFinder.prototype.findNext = function(element, modeName, traverseDown) {
+            void 0 === traverseDown && (traverseDown = !1);
+            var walker = this.getDomWalker(modeName = void 0 === modeName ? !0 : modeName), modeName = element.getAttribute(jsCommon.FocusNavModeAttribute);
+            return "Group" === modeName || "Browser" === modeName || traverseDown ? this.traverseDown(element, walker) : this.searchFocusElement(element, walker);
+        }, DomOrderFocusFinder.prototype.searchFocusElement = function(element, walker) {
+            var focusable = this.traverseForward(walker.getNextSibling(element), walker);
+            return focusable || (element.parentElement && element.parentElement.getAttribute(jsCommon.FocusNavModeAttribute) !== this.focusNavMode ? focusable = this.searchFocusElement(element.parentElement, walker) : element.parentNode && element.parentNode.nodeType === Node.ELEMENT_NODE && element.parentNode.getAttribute(jsCommon.FocusNavModeAttribute) !== this.focusNavMode && (focusable = this.searchFocusElement(element.parentNode, walker))), 
+            focusable;
+        }, DomOrderFocusFinder.prototype.traverseForward = function(element, walker) {
+            var focusable;
+            if (element) return jsCommon.isTabbable(element) ? element : focusable = (focusable = null == element.getAttribute(jsCommon.DOMConstants.skipChildrenFocusAttribute) ? this.traverseDown(element, walker) : focusable) || this.traverseForward(walker.getNextSibling(element), walker);
+        }, DomOrderFocusFinder.prototype.traverseDown = function(element, walker) {
+            if (element && "Skip" !== element.getAttribute(jsCommon.FocusNavModeAttribute)) return this.traverseForward(walker.getNextChild(element), walker);
+        }, DomOrderFocusFinder.prototype.getDomWalker = function(forward) {
+            var _this = this;
+            return forward ? {
+                getNextSibling: function(element) {
+                    return element.nextElementSibling;
+                },
+                getNextChild: function(element) {
+                    return _.isEmpty(element.children) ? element.hasChildNodes() ? _this.getNextChildNodes(element, forward) : void 0 : element.children[0];
+                }
+            } : {
+                getNextSibling: function(element) {
+                    return element.previousElementSibling;
+                },
+                getNextChild: function(element) {
+                    return _.isEmpty(element.children) ? element.hasChildNodes() ? _this.getNextChildNodes(element, forward) : void 0 : element.children[element.children.length - 1];
+                }
+            };
+        }, DomOrderFocusFinder.prototype.getNextChildNodes = function(element, forward) {
+            var childNodes = element.childNodes, numChildren = childNodes.length, incrementor = forward ? 1 : -1, i = forward ? 0 : numChildren - 1;
+            do {
+                var child = childNodes[i];
+                if (child && child.nodeType === Node.ELEMENT_NODE) return child;
+            } while (0 <= (i += incrementor) && i < numChildren);
+        }, DomOrderFocusFinder;
+    }();
+    jsCommon.DomOrderFocusFinder = DomOrderFocusFinder;
+}(jsCommon = jsCommon || {}), function(jsCommon) {
+    var TabOrderFocusFinder = function() {
+        function TabOrderFocusFinder(focusNavMode) {
+            this.focusNavMode = focusNavMode = void 0 === focusNavMode ? "Group" : focusNavMode;
+        }
+        return TabOrderFocusFinder.prototype.findNext = function(parentElement, forward, cycleBack, traverseDown) {
+            var nextElement;
+            return void 0 === forward && (forward = !0), void 0 === cycleBack && (cycleBack = !0), 
+            (traverseDown = void 0 === traverseDown ? !1 : traverseDown) || hasTabOrderEnabledAttribute(parentElement) ? nextElement = this.getNextTabOrderChild(parentElement, forward, forward ? 10000001 : -10000001) : hasTabOrderAttribute(parentElement) ? nextElement = this.getNextTabOrderSibling(parentElement, forward, cycleBack) : hasTabOrderChildAttribute(parentElement) && (parentElement = function(element) {
+                return function(element, parent) {
+                    parent = $(element).closest("[" + parent + "]");
+                    return parent && parent.get(0);
+                }(element, jsCommon.TabOrderAttribute);
+            }(parentElement), nextElement = this.getNextTabOrderSibling(parentElement, forward, cycleBack)), 
+            nextElement;
+        }, TabOrderFocusFinder.prototype.getNextTabOrderSibling = function(tabOrderContainer, forward, cycleBack) {
+            var siblingToReturn, currentTabOrder = tabOrderContainer.getAttribute(jsCommon.TabOrderAttribute), currentTabOrder = parseFloat(currentTabOrder);
+            if (!isNaN(currentTabOrder)) {
+                tabOrderContainer = function(element, matcher) {
+                    matcher = "HierarchicalTabOrder" === matcher ? jsCommon.FocusNavModeHierarchicalTabOrderMatcher : jsCommon.FocusNavModeGroupMatcher;
+                    return $(element).parents(matcher)[0];
+                }(tabOrderContainer, this.focusNavMode);
+                if (!tabOrderContainer) return;
+                !(siblingToReturn = this.getNextTabOrderChild(tabOrderContainer, forward, currentTabOrder)) && cycleBack && (siblingToReturn = this.getNextTabOrderChild(tabOrderContainer, forward, forward ? 10000001 : -10000001));
+            }
+            return siblingToReturn;
+        }, TabOrderFocusFinder.prototype.getNextTabOrderChild = function(parent, forward, currentTabIndex) {
+            var next, nextTabIndex, tabOrderElements = $(parent).find("[" + jsCommon.TabOrderAttribute + "]");
+            return (tabOrderElements = "HierarchicalTabOrder" === this.focusNavMode ? tabOrderElements.filter(function(_index, element) {
+                return jsCommon.FocusNavigationUtility.getTabbableParent(element) === parent;
+            }) : tabOrderElements).each(function(_index, elem) {
+                var elementTabIndex = getTabOrder(elem);
+                jsCommon.FocusNavigationUtility.isElementTabbable(elem) && (forward ? elementTabIndex < currentTabIndex : currentTabIndex < elementTabIndex) && (void 0 === next && void 0 === nextTabIndex || (forward ? nextTabIndex < elementTabIndex : elementTabIndex < nextTabIndex)) && (nextTabIndex = elementTabIndex, 
+                next = elem);
+            }), next;
+        }, TabOrderFocusFinder;
+    }();
+    function getTabOrder(element) {
+        if (element.hasAttribute(jsCommon.TabOrderAttribute)) return parseFloat(element.getAttribute(jsCommon.TabOrderAttribute));
+    }
+    function hasTabOrderAttribute(element) {
+        return null != element.getAttribute(jsCommon.TabOrderAttribute);
+    }
+    function hasTabOrderEnabledAttribute(element) {
+        return null != element.getAttribute(jsCommon.TabOrderEnabledAttribute);
+    }
+    function hasTabOrderChildAttribute(element) {
+        return null != element.getAttribute(jsCommon.TabOrderChildAttribute);
+    }
+    jsCommon.TabOrderFocusFinder = TabOrderFocusFinder, jsCommon.getTabOrder = getTabOrder, 
+    jsCommon.hasTabOrderAttribute = hasTabOrderAttribute, jsCommon.hasTabOrderEnabledAttribute = hasTabOrderEnabledAttribute, 
+    jsCommon.hasTabOrderChildAttribute = hasTabOrderChildAttribute;
+}(jsCommon = jsCommon || {}), function(jsCommon) {
+    var FocusGroupNavigation = function() {
+        function FocusGroupNavigation(skipCyclicNavigation) {
+            this.skipCyclicNavigation = skipCyclicNavigation = void 0 === skipCyclicNavigation ? !1 : skipCyclicNavigation;
+        }
+        return Object.defineProperty(FocusGroupNavigation.prototype, "name", {
+            get: function() {
+                return "Group";
+            },
+            enumerable: !1,
+            configurable: !0
+        }), FocusGroupNavigation.prototype.shouldHandleFocus = function(element, modeRoot) {
+            return !$.contains(modeRoot, jsCommon.FocusNavigationUtility.getTabbableParent(element, modeRoot));
+        }, FocusGroupNavigation.prototype.findNextElementToFocus = function(activeElement, event) {
+            var groupElement = FocusGroupNavigation.getGroupNavigationElement(activeElement);
+            switch (event.keyCode) {
+              case 39:
+              case 40:
+                if (FocusGroupNavigation.groupElementSupportsArrows(groupElement) && !FocusGroupNavigation.canHandleKeyEvents(activeElement)) return FocusGroupNavigation.getFocusNextElement(!0);
+                break;
+
+              case 38:
+              case 37:
+                if (FocusGroupNavigation.groupElementSupportsArrows(groupElement) && !FocusGroupNavigation.canHandleKeyEvents(activeElement)) return FocusGroupNavigation.getFocusNextElement(!1);
+                break;
+
+              case 9:
+                if (!jsCommon.FocusNavigationUtility.isElementContentEditable(activeElement)) return FocusGroupNavigation.getFocusNextElement(!event.shiftKey, void 0, this.skipCyclicNavigation);
+                break;
+
+              case 27:
+                return jsCommon.FocusNavigationUtility.getTabbableParent(document.activeElement);
+
+              case 13:
+                if (groupElement && null != groupElement.getAttribute(jsCommon.TabOrderRecursiveEnabledAttribute)) return jsCommon.FocusNavigationUtility.getFirstTabbableChild(document.activeElement);
+            }
+        }, FocusGroupNavigation.getFocusNextElement = function(forward, groupElement_1, skipCyclicNavigation) {
+            void 0 === groupElement_1 && (groupElement_1 = null), void 0 === skipCyclicNavigation && (skipCyclicNavigation = !1);
+            var elementToFocus = document.activeElement;
+            if (groupElement_1 = groupElement_1 || FocusGroupNavigation.getFirstFocusableParent(elementToFocus)) {
+                var isTabOrderEnabled = FocusGroupNavigation.getGroupNavigationElement(groupElement_1), focusFinder = void 0, elementToFocus = void 0;
+                if (isTabOrderEnabled && null != isTabOrderEnabled.getAttribute(jsCommon.TabOrderRecursiveEnabledAttribute) ? elementToFocus = (focusFinder = new jsCommon.TabOrderRecursiveFocusFinder(isTabOrderEnabled)).findNext(groupElement_1, forward) : (elementToFocus = (isTabOrderEnabled = jsCommon.hasTabOrderEnabledAttribute(groupElement_1) || jsCommon.hasTabOrderAttribute(groupElement_1)) ? (focusFinder = new jsCommon.TabOrderFocusFinder()).findNext(groupElement_1, forward) : elementToFocus) && isTabOrderEnabled || (elementToFocus = (focusFinder = new jsCommon.DomOrderFocusFinder()).findNext(groupElement_1, forward)), 
+                elementToFocus) return elementToFocus;
+                if ("Group" !== groupElement_1.getAttribute(jsCommon.FocusNavModeAttribute) && !skipCyclicNavigation) {
+                    groupElement_1 = FocusGroupNavigation.getParentGroupElement(groupElement_1);
+                    return groupElement_1 ? focusFinder.findNext(groupElement_1, forward) : void 0;
+                }
+            }
+        }, FocusGroupNavigation.getGroupNavigationElement = function(focusedElement) {
+            var focusedIsGroup = focusedElement.getAttribute(jsCommon.FocusNavModeAttribute);
+            return focusedIsGroup && "Group" === focusedIsGroup ? focusedElement : FocusGroupNavigation.getParentGroupElement(focusedElement);
+        }, FocusGroupNavigation.getFirstFocusableParent = function(element) {
+            if (!element) return null;
+            if (jsCommon.isTabbable(element) || "Group" === element.getAttribute(jsCommon.FocusNavModeAttribute)) return element;
+            for (var parent = element.parentElement || element.parentNode && element.parentNode.nodeType === Node.ELEMENT_NODE ? element.parentNode : null; parent; ) {
+                if (jsCommon.isTabbable(parent) || "Group" === parent.getAttribute(jsCommon.FocusNavModeAttribute)) return parent;
+                parent = parent.parentElement || parent.parentNode && parent.parentNode.nodeType === Node.ELEMENT_NODE ? parent.parentNode : null;
+            }
+            return parent;
+        }, FocusGroupNavigation.getParentGroupElement = function(element) {
+            return $(element).parents(jsCommon.FocusNavModeGroupMatcher).get(0);
+        }, FocusGroupNavigation.canHandleKeyEvents = function(element) {
+            return jsCommon.FocusNavigationUtility.isElementContentEditable(element) || jsCommon.FocusNavigationUtility.isTextElement(element);
+        }, FocusGroupNavigation.groupElementSupportsArrows = function(groupElement) {
+            return !groupElement || null == groupElement.getAttribute(jsCommon.TabOrderRecursiveEnabledAttribute) || null == groupElement.getAttribute(jsCommon.SkipArrowNavigationAttribute);
+        }, FocusGroupNavigation;
+    }();
+    jsCommon.FocusGroupNavigation = FocusGroupNavigation;
+}(jsCommon = jsCommon || {}), function(jsCommon) {
+    var HierarchicalNavigation = function() {
+        function HierarchicalNavigation() {}
+        return Object.defineProperty(HierarchicalNavigation.prototype, "name", {
+            get: function() {
+                return "Hierarchy";
+            },
+            enumerable: !1,
+            configurable: !0
+        }), HierarchicalNavigation.prototype.shouldHandleFocus = function() {
+            return !0;
+        }, HierarchicalNavigation.prototype.findNextElementToFocus = function(activeElement, event, modeRoot) {
+            switch (event.keyCode) {
+              case 9:
+                if (jsCommon.FocusNavigationUtility.isElementContentEditable(activeElement)) return;
+                var topChildren = jsCommon.FocusNavigationUtility.getTabbableChildren(modeRoot), descendents = jsCommon.FocusNavigationUtility.getTabbableParent(activeElement, modeRoot) === modeRoot;
+                if (event.shiftKey) {
+                    if (0 < topChildren.length && (activeElement !== topChildren[0] || descendents)) return jsCommon.FocusNavigationUtility.getPrevTabbableSibling(activeElement, modeRoot);
+                } else {
+                    if (0 < topChildren.length && (activeElement !== topChildren[topChildren.length - 1] || descendents)) return jsCommon.FocusNavigationUtility.getNextTabbableSibling(activeElement, modeRoot);
+                    descendents = jsCommon.FocusNavigationUtility.getTabbableDescendants(modeRoot);
+                    if (0 < descendents.length) return void descendents[descendents.length - 1].focus();
+                }
+                break;
+
+              case 27:
+                if (activeElement !== modeRoot) return jsCommon.FocusNavigationUtility.getTabbableParent(activeElement);
+                break;
+
+              case 13:
+                return jsCommon.FocusNavigationUtility.getFirstTabbableChild(activeElement);
+            }
+        }, HierarchicalNavigation;
+    }();
+    jsCommon.HierarchicalNavigation = HierarchicalNavigation;
+}(jsCommon = jsCommon || {}), function(powerbi) {
+    !function(host) {
+        !function(events) {
+            events.LuciaSessionStateChangedEventArgs = function() {};
+        }(host.events || (host.events = {}));
+    }(powerbi.host || (powerbi.host = {}));
+}(powerbi = powerbi || {}), function(powerbi) {
+    !function(host) {
+        (host.global || (host.global = {})).events = {
+            SaveEndedEvent: {
+                type: 4,
+                name: "SaveEndedEvent"
+            },
+            LuciaDomainModelChangedEvent: {
+                type: 4,
+                name: "LuciaDomainModelChangedEvent"
+            },
+            QnaSettingsChangedEvent: {
+                type: 4,
+                name: "QnaSettingsChangedEvent"
+            },
+            ReportContentsReplacedEvent: {
+                type: 4,
+                name: "ReportContentsReplacedEvent"
+            },
+            ModelChangedEvent: {
+                type: 4,
+                name: "ModelChangedEvent"
+            },
+            SignInStatusChangedEvent: {
+                type: 4,
+                name: "SignInStatusChangedEvent"
+            },
+            WindowStateChangedEvent: {
+                type: 4,
+                name: "WindowStateChangedEvent"
+            },
+            ReportQueriesChangedEvent: {
+                type: 4,
+                name: "ReportQueriesChangedEvent"
+            },
+            UpdateAvailableEvent: {
+                type: 4,
+                name: "UpdateAvailableEvent"
+            },
+            SelectedSensitivityLabelChangedEvent: {
+                type: 4,
+                name: "SelectedSensitivityLabelChangedEvent"
+            }
+        };
+    }(powerbi.host || (powerbi.host = {}));
+}(powerbi = powerbi || {}), function(powerbi) {
+    !function(common) {
+        (common.modules || (common.modules = {})).JQueryUIModule = {
+            javascript: "jquery-ui",
+            css: [ "jquery-ui" ]
+        };
+    }(powerbi.common || (powerbi.common = {}));
+}(powerbi = powerbi || {}), function(powerbi) {
+    var LinkedList = function() {
+        function LinkedList() {
+            this._head = new LinkedListNode(), this._tail = new LinkedListNode(), this._head.next = this._tail, 
+            this._tail.prev = this._head, this._length = 0;
+        }
+        return LinkedList.prototype.insertToHead = function(node) {
+            node.next = this._head.next, node.prev = this._head, (this._head.next = node).next.prev = node, 
+            this._length++;
+        }, LinkedList.prototype.head = function() {
+            if (0 < this._length) return this._head.next;
+        }, LinkedList.prototype.tail = function() {
+            if (0 < this._length) return this._tail.prev;
+        }, LinkedList.prototype.removeFromTail = function() {
+            var nodeToRemove;
+            0 < this._length && (nodeToRemove = this._tail.prev, this.remove(nodeToRemove));
+        }, LinkedList.prototype.remove = function(nodeToRemove) {
+            this._length <= 0 || void 0 === nodeToRemove.prev || void 0 === nodeToRemove.next || (nodeToRemove.prev.next = nodeToRemove.next, 
+            nodeToRemove.next.prev = nodeToRemove.prev, this._length--);
+        }, LinkedList.prototype.length = function() {
+            return this._length;
+        }, LinkedList;
+    }();
+    powerbi.LinkedList = LinkedList;
+    var LinkedListNode = function(value) {
+        this.value = value = void 0 === value ? void 0 : value;
+    };
+    powerbi.LinkedListNode = LinkedListNode;
+}(powerbi = powerbi || {}), function(jsCommon) {
+    var parseIntSubstrFast = jsCommon.StringExtensions.parseIntSubstrFast;
+    !function(Version) {
+        function tryParse(versionString) {
+            for (var prerel, major = 0, minor = 0, patch = 0, currentPart = 0, i = 0, currentPartStart = 0, len = versionString.length; i <= len; i++) {
+                var charCode = i === len ? 46 : versionString.charCodeAt(i);
+                switch (charCode) {
+                  case 46:
+                  case 45:
+                    if (i === currentPartStart) return;
+                    var partValue = parseIntSubstrFast(versionString, currentPartStart, i - currentPartStart);
+                    if (null == partValue) return;
+                    switch (currentPart) {
+                      case 0:
+                        major = partValue;
+                        break;
+
+                      case 1:
+                        minor = partValue;
+                        break;
+
+                      case 2:
+                        patch = partValue;
+                        break;
+
+                      default:
+                        return;
+                    }
+                    if (currentPart++, currentPartStart = i + 1, 45 === charCode) {
+                        if (3 !== currentPart) return;
+                        if (!function(prerel) {
+                            for (var i = 0, len = prerel.length; i < len; i++) {
+                                var charCode = prerel.charCodeAt(i);
+                                if (!(65 <= charCode && charCode <= 90 || 97 <= charCode && charCode <= 122 || 48 <= charCode && charCode <= 57 || 45 === charCode || 46 === charCode)) return !1;
+                            }
+                            return !0;
+                        }(prerel = versionString.substr(i + 1))) return;
+                        i = len;
+                    }
+                    break;
+
+                  default:
+                    if (charCode < 48 || 57 < charCode) return;
+                }
+            }
+            var version = {
+                major: major,
+                minor: minor,
+                patch: patch
+            };
+            return prerel && (version.prerel = prerel), version;
+        }
+        function gt(v1, v2) {
+            return 0 < cmp(normalize(v1), normalize(v2));
+        }
+        function normalize(version) {
+            return _.isString(version) ? tryParse(version) || Version.Zero : version;
+        }
+        function cmp(v1, v2) {
+            var result = cmpPart(v1.major, v2.major);
+            return result || ((result = cmpPart(v1.minor, v2.minor)) || (result = cmpPart(v1.patch, v2.patch)) ? result : function(v1, v2) {
+                var v1Number = _.isEmpty(v1), v2Number = _.isEmpty(v2);
+                if (v1Number) return v2Number ? 0 : 1;
+                if (v2Number) return -1;
+                v1Number = parseIntSubstrFast(v1, 0, v1.length), v2Number = parseIntSubstrFast(v2, 0, v2.length);
+                return null == v1Number ? null == v2Number ? v1.localeCompare(v2) : 1 : null == v2Number ? -1 : cmpPart(v1Number, v2Number);
+            }(v1.prerel, v2.prerel));
+        }
+        function cmpPart(v1, diff) {
+            diff = (v1 = v1 || 0) - (diff = diff || 0);
+            return 0 == diff ? 0 : diff < 0 ? -1 : 1;
+        }
+        Version.Zero = {
+            major: 0,
+            minor: 0,
+            patch: 0
+        }, Version.ZeroStr = "0.0", Version.LargestVersion = "99.9", Version.tryParse = tryParse, 
+        Version.toString = function(version) {
+            return _.isString(version) ? (tryParse(version), version) : null == version.prerel ? version.major + "." + version.minor + "." + version.patch : version.major + "." + version.minor + "." + version.patch + "-" + version.prerel;
+        }, Version.gt = gt, Version.lt = function(v1, v2) {
+            return cmp(normalize(v1), normalize(v2)) < 0;
+        }, Version.ge = function(v1, v2) {
+            return 0 <= cmp(normalize(v1), normalize(v2));
+        }, Version.eq = function(v1, v2) {
+            return v1 = normalize(v1), v2 = normalize(v2), !cmp(normalize(v1), normalize(v2));
+        }, Version.max = function(v1, v2) {
+            return gt(normalize(v1), normalize(v2)) ? v1 : v2;
+        };
+    }(jsCommon.Version || (jsCommon.Version = {}));
+}(jsCommon = jsCommon || {}), function(jsCommon) {
+    !function(FontPickerUtility) {
+        FontPickerUtility.getCustomFontPickerInfo = function(newFontFamily) {
+            _.isEmpty(newFontFamily);
+            var match = newFontFamily.match(/^(?:\s)*('|")?((?:\w|\s|-|\\.)+)(?:\1(?=,|$))/);
+            return match && match[2] || newFontFamily;
+        };
+    }(jsCommon.FontPickerUtility || (jsCommon.FontPickerUtility = {}));
+}(jsCommon = jsCommon || {}), function(powerbi) {
+    !function(common) {
+        !function(utils) {
+            var DateExtensions = jsCommon.DateExtensions;
+            !function(DateFormatter) {
+                function getPrettyRelativeDate(floor, localize, capitalizeFirstLetter) {
+                    if (void 0 === capitalizeFirstLetter && (capitalizeFirstLetter = !1), DateExtensions.isMomentPresent(), 
+                    !floor) return "-";
+                    var minutes = moment().diff(floor), seconds = moment.duration(minutes), floor = Math.floor;
+                    seconds.asMilliseconds();
+                    minutes = floor(seconds.asYears());
+                    if (1 < minutes) return localize.format("RelativeDate_YearsAgo", [ minutes ]);
+                    if (1 === minutes) return localize.get(useCapitalizeVersion("RelativeDate_YearAgo", capitalizeFirstLetter));
+                    minutes = floor(seconds.asMonths());
+                    if (1 < minutes) return localize.format("RelativeDate_MonthsAgo", [ minutes ]);
+                    if (1 === minutes) return localize.get(useCapitalizeVersion("RelativeDate_MonthAgo", capitalizeFirstLetter));
+                    minutes = floor(seconds.asDays());
+                    if (1 < minutes) return localize.format("RelativeDate_DaysAgo", [ minutes ]);
+                    if (1 === minutes) return localize.get(useCapitalizeVersion("RelativeDate_DayAgo", capitalizeFirstLetter));
+                    minutes = floor(seconds.asHours());
+                    if (1 < minutes) return localize.format("RelativeDate_HoursAgo", [ minutes ]);
+                    if (1 === minutes) return localize.get(useCapitalizeVersion("RelativeDate_HourAgo", capitalizeFirstLetter));
+                    minutes = floor(seconds.asMinutes());
+                    if (1 < minutes) return localize.format("RelativeDate_MinutesAgo", [ minutes ]);
+                    if (1 === minutes) return localize.get(useCapitalizeVersion("RelativeDate_MinuteAgo", capitalizeFirstLetter));
+                    seconds = floor(seconds.asSeconds());
+                    return 30 <= seconds ? localize.format("RelativeDate_SecondsAgo", [ seconds ]) : localize.get("RelativeDate_Now");
+                }
+                function useCapitalizeVersion(target, useCapitalizeVersion) {
+                    return useCapitalizeVersion ? target + "_Capitalize" : target;
+                }
+                function isSameDay(dateTime1, dateTime2) {
+                    return dateTime1.getFullYear() === dateTime2.getFullYear() && dateTime1.getMonth() === dateTime2.getMonth() && dateTime1.getDate() === dateTime2.getDate();
+                }
+                DateFormatter.getRelativeDateWithText = function(givenTime, localize, capitalizeFirstLetter) {
+                    void 0 === capitalizeFirstLetter && (capitalizeFirstLetter = !1);
+                    var todayDateTime = new Date(), time = Intl.DateTimeFormat(localize.currentLanguageLocale, {
+                        hour: "numeric",
+                        minute: "numeric"
+                    }).format(givenTime);
+                    if (isSameDay(givenTime, todayDateTime)) return localize.format("TodayAt", time);
+                    var yesterdayDateTime = new Date();
+                    return yesterdayDateTime.setDate(todayDateTime.getDate() - 1), isSameDay(givenTime, yesterdayDateTime) ? localize.format("YesterdayAt", time) : getPrettyRelativeDate(givenTime, localize, capitalizeFirstLetter);
+                }, DateFormatter.getPrettyRelativeDate = getPrettyRelativeDate, DateFormatter.prettyRelativeDateIndexOrder = function(floor) {
+                    if (DateExtensions.isMomentPresent(), !floor) return 0;
+                    var minutes = moment().diff(floor), seconds = moment.duration(minutes), floor = Math.floor;
+                    return 0 <= seconds.asMilliseconds() ? 1 <= (minutes = floor(seconds.asYears())) ? 1e6 + minutes : 1 <= (minutes = floor(seconds.asMonths())) ? 1e5 + minutes : 1 <= (minutes = floor(seconds.asDays())) ? 1e4 + minutes : 1 <= (minutes = floor(seconds.asHours())) ? 1e3 + minutes : 1 <= (minutes = floor(seconds.asMinutes())) ? 100 + minutes : 30 <= (seconds = floor(seconds.asSeconds())) ? seconds : 0 : 0;
+                };
+            }(utils.DateFormatter || (utils.DateFormatter = {}));
+        }(common.utils || (common.utils = {}));
+    }(powerbi.common || (powerbi.common = {}));
+}(powerbi = powerbi || {}), function(jsCommon) {
+    var HierarchicalTabOrderNavigation = function() {
+        function HierarchicalTabOrderNavigation() {}
+        return Object.defineProperty(HierarchicalTabOrderNavigation.prototype, "name", {
+            get: function() {
+                return "HierarchicalTabOrder";
+            },
+            enumerable: !1,
+            configurable: !0
+        }), HierarchicalTabOrderNavigation.prototype.shouldHandleFocus = function(element) {
+            return !jsCommon.FocusNavigationUtility.isElementContentEditable(element);
+        }, HierarchicalTabOrderNavigation.prototype.findNextElementToFocus = function(activeElement, event) {
+            var nextElement, isRootElement = activeElement.hasAttribute(jsCommon.TabOrderEnabledAttribute), isParentCanvasElement = "HierarchicalTabOrder" === activeElement.getAttribute(jsCommon.FocusNavModeAttribute);
+            switch (event.keyCode) {
+              case 39:
+              case 40:
+                nextElement = HierarchicalTabOrderNavigation.getFocusNextElement(activeElement, !0, isRootElement);
+                break;
+
+              case 38:
+              case 37:
+                nextElement = HierarchicalTabOrderNavigation.getFocusNextElement(activeElement, !1, isRootElement);
+                break;
+
+              case 9:
+                nextElement = HierarchicalTabOrderNavigation.getFocusNextElement(activeElement, !event.shiftKey, isRootElement);
+                break;
+
+              case 27:
+                nextElement = jsCommon.FocusNavigationUtility.getTabbableParent(document.activeElement);
+                break;
+
+              case 13:
+                nextElement = isParentCanvasElement ? HierarchicalTabOrderNavigation.getFocusNextElement(activeElement, !0, !0) : void 0;
+            }
+            return nextElement;
+        }, HierarchicalTabOrderNavigation.getFocusNextElement = function(parentCanvasElement, forward, traverseDown) {
+            var nextElement, domOrderFocusFinder = parentCanvasElement.hasAttribute(jsCommon.TabOrderEnabledAttribute);
+            return (nextElement = void 0 !== jsCommon.getTabOrder(parentCanvasElement) || domOrderFocusFinder ? new jsCommon.TabOrderFocusFinder("HierarchicalTabOrder").findNext(parentCanvasElement, forward, !0, traverseDown) : nextElement) || ((nextElement = (domOrderFocusFinder = new jsCommon.DomOrderFocusFinder("HierarchicalTabOrder")).findNext(parentCanvasElement, forward, traverseDown)) || traverseDown || (parentCanvasElement = $(parentCanvasElement).parents(jsCommon.FocusNavModeHierarchicalTabOrderMatcher)[0], 
+            nextElement = domOrderFocusFinder.findNext(parentCanvasElement, forward, !0))), 
+            nextElement;
+        }, HierarchicalTabOrderNavigation;
+    }();
+    jsCommon.HierarchicalTabOrderNavigation = HierarchicalTabOrderNavigation;
+}(jsCommon = jsCommon || {}), function(jsCommon) {
+    var TabOrderRecursiveFocusFinder = function() {
+        function TabOrderRecursiveFocusFinder(groupElement) {
+            this.groupElement = groupElement;
+        }
+        return TabOrderRecursiveFocusFinder.prototype.findNext = function(isTabOrderInitialized, forward) {
+            var _this = this;
+            void 0 === forward && (forward = !0);
+            var siblingToReturn, currentTabOrder = isTabOrderInitialized === this.groupElement ? -1 : this.getTabIndex(isTabOrderInitialized), isTabOrderInitialized = isTabOrderInitialized !== this.groupElement && !isNaN(currentTabOrder), nextTabOrder = forward ? 1 / 0 : 0;
+            return isTabOrderInitialized || (currentTabOrder = forward ? -1 : 1 / 0), this.buildTabOrderMany([].slice.call(this.groupElement.children)).forEach(function(tabOrderElem) {
+                var siblingOrder = _this.getTabIndex(tabOrderElem.elem);
+                isNaN(siblingOrder) || (forward ? currentTabOrder < siblingOrder && siblingOrder <= nextTabOrder : siblingOrder < currentTabOrder && nextTabOrder <= siblingOrder) && (nextTabOrder = siblingOrder, 
+                siblingToReturn = tabOrderElem.elem);
+            }), siblingToReturn;
+        }, TabOrderRecursiveFocusFinder.prototype.getTabIndex = function(element) {
+            return parseFloat(element.getAttribute(jsCommon.TabIndexAttribute));
+        }, TabOrderRecursiveFocusFinder.prototype.buildTabOrderMany = function(elements) {
+            var _this = this, elems = [];
+            return elements.forEach(function(element) {
+                null == element.getAttribute(jsCommon.DOMConstants.skipChildrenFocusAttribute) && (elems = _.concat(elems, _this.buildTabOrders(element)));
+            }), elems;
+        }, TabOrderRecursiveFocusFinder.prototype.buildTabOrders = function(element) {
+            var currTabIndex = this.getTabIndex(element);
+            return isNaN(currTabIndex) ? this.buildTabOrderMany([].slice.call(element.children)) : [ {
+                tabOrder: currTabIndex,
+                elem: element
+            } ];
+        }, TabOrderRecursiveFocusFinder;
+    }();
+    jsCommon.TabOrderRecursiveFocusFinder = TabOrderRecursiveFocusFinder;
+}(jsCommon = jsCommon || {}), function(jsCommon) {
+    jsCommon.FocusPriorityAttribute = "focus-priority", jsCommon.KeyboardShortcutsAttribute = "keyboard-shortcuts", 
+    jsCommon.extendedShortcutScopeAttribute = "extended-shortcut-scope";
+    var ShortcutContainer = function() {
+        function ShortcutContainer() {
+            this.shortcuts = [], this.scopedShortcuts = [];
+        }
+        return ShortcutContainer.prototype.add = function(shortcut) {
+            var mask = this.getKeyCode(shortcut.keycode, shortcut.shift, shortcut.alt, shortcut.ctrl), shortcutStorage = shortcut.scoped ? this.scopedShortcuts : this.shortcuts;
+            shortcutStorage[mask] && !_.find(shortcutStorage[mask], function(sc) {
+                return $(sc.element).is(shortcut.element);
+            }) ? shortcutStorage[mask].push(shortcut) : _.isEmpty(this.shortcuts[mask]) && (shortcutStorage[mask] = [ shortcut ]);
+        }, ShortcutContainer.prototype.remove = function(shortcut) {
+            var mask = this.getKeyCode(shortcut.keycode, shortcut.shift, shortcut.alt, shortcut.ctrl), shortcutStorage = shortcut.scoped ? this.scopedShortcuts : this.shortcuts;
+            _.remove(shortcutStorage[mask], function(sc) {
+                return $(sc.element).is(shortcut.element);
+            });
+        }, ShortcutContainer.prototype.handle = function(reverseDirection) {
+            if (256 < reverseDirection.keyCode) return !1;
+            var elementToFocus = jsCommon.BrowserUtils.isCtrlOrMeta(reverseDirection), shortcuts = this.getKeyCode(reverseDirection.keyCode, reverseDirection.shiftKey, reverseDirection.altKey, elementToFocus), reverseDirection = reverseDirection.shiftKey && elementToFocus && 1653 === shortcuts, elementToFocus = this.findScopedShortcut(shortcuts);
+            if (!elementToFocus) {
+                shortcuts = this.filterGroups(this.shortcuts[reverseDirection ? 1141 : shortcuts]);
+                if (_.isEmpty(shortcuts)) return !1;
+                elementToFocus = this.getNextShortcutElementToFocus(shortcuts, void 0, reverseDirection);
+            }
+            return !!elementToFocus && (this.focusOnGroup(elementToFocus), !0);
+        }, ShortcutContainer.prototype.handleByPriority = function(keycode, shift, alt, ctrl, focusPriority) {
+            this.focusOnGroup(this.getNextShortcutElementToFocus(this.filterGroups(this.shortcuts[this.getKeyCode(keycode, shift, alt, ctrl)]), focusPriority));
+        }, ShortcutContainer.prototype.focusOnGroup = function(elementToFocus) {
+            "HierarchicalTabOrder" === elementToFocus.getAttribute(jsCommon.FocusNavModeAttribute) ? jsCommon.FocusManager.focus(jsCommon.HierarchicalTabOrderNavigation.getFocusNextElement(elementToFocus, !0, !0)) : jsCommon.FocusManager.focus(jsCommon.FocusGroupNavigation.getFocusNextElement(!0, elementToFocus));
+        }, ShortcutContainer.prototype.getKeyCode = function(index, shift, alt, ctrl) {
+            return shift && (index |= 512), ctrl && (index |= 1024), alt && (index |= 2048), 
+            index;
+        }, ShortcutContainer.prototype.filterGroups = function(shortcuts) {
+            return _.filter(shortcuts, function(shortcut) {
+                var isElementVisible = jsCommon.FocusNavigationUtility.isElementVisible(shortcut.element);
+                return "HierarchicalTabOrder" === shortcut.element.getAttribute(jsCommon.FocusNavModeAttribute) ? isElementVisible && !!jsCommon.HierarchicalTabOrderNavigation.getFocusNextElement(shortcut.element, !0, !0) : isElementVisible && !!jsCommon.FocusGroupNavigation.getFocusNextElement(!0, shortcut.element);
+            });
+        }, ShortcutContainer.getFocusPriority = function(element, searchParents) {
+            if (void 0 === searchParents && (searchParents = !0), element) {
+                var focusPriority = element.getAttribute(jsCommon.FocusPriorityAttribute);
+                return null != focusPriority ? parseInt(focusPriority, 10) : null != element.parentElement && searchParents ? this.getFocusPriority(element.parentElement) : void 0;
+            }
+        }, ShortcutContainer.prototype.getFocusPriority = function(element, searchParents) {
+            return ShortcutContainer.getFocusPriority(element, searchParents = void 0 === searchParents ? !0 : searchParents);
+        }, ShortcutContainer.prototype.findScopedShortcut = function(shortcutElements) {
+            var scope = document.activeElement, extendedScope = this.findExtendedScope(scope), shortcutElements = this.scopedShortcuts[shortcutElements], shortcutElements = this.filterGroups(shortcutElements);
+            if (!_.isEmpty(shortcutElements) && scope) for (var _i = 0, shortcutElements_1 = shortcutElements; _i < shortcutElements_1.length; _i++) {
+                var shortcutElement = shortcutElements_1[_i];
+                if (shortcutElement) {
+                    if ($(scope).is(shortcutElement.element) || $.contains(scope, shortcutElement.element)) return shortcutElement.element;
+                    if (extendedScope && ($(extendedScope).is(shortcutElement.element) || $.contains(extendedScope, shortcutElement.element))) return shortcutElement.element;
+                }
+            }
+        }, ShortcutContainer.prototype.findExtendedScope = function(scope) {
+            for (var currScope = scope; currScope; ) {
+                if (currScope.attributes.getNamedItem(jsCommon.extendedShortcutScopeAttribute)) return currScope;
+                currScope = currScope.parentElement;
+            }
+        }, ShortcutContainer.prototype.findCurrentFocusedShortcutElement = function(shortcutString) {
+            if (document.activeElement) for (var element = document.activeElement; element; ) {
+                if (element.getAttribute(jsCommon.KeyboardShortcutsAttribute) === shortcutString) return element;
+                element = element.parentElement;
+            }
+        }, ShortcutContainer.prototype.getNextShortcutElementToFocus = function(shortcuts, focusPriority, reverseDirection) {
+            void 0 === reverseDirection && (reverseDirection = !1);
+            var shortcutToFocus = (shortcuts = _.sortBy(shortcuts, function(sc) {
+                return sc.focusPriority;
+            }))[0];
+            if (document.activeElement && 1 < shortcuts.length) for (var currentFocusedElement = null == focusPriority ? this.findCurrentFocusedShortcutElement(shortcutToFocus.shortcutString) : null, i = 0; i <= shortcuts.length - 1; i++) {
+                var previousIndex = shortcuts[i];
+                if (null != focusPriority && focusPriority > (previousIndex.focusPriority || -1) || currentFocusedElement && $(currentFocusedElement).is(previousIndex.element)) {
+                    previousIndex = 0 === i ? shortcuts.length - 1 : i - 1, shortcutToFocus = shortcuts[(reverseDirection ? previousIndex : i + 1) % shortcuts.length];
+                    break;
+                }
+            }
+            return null == shortcutToFocus ? void 0 : shortcutToFocus.element;
+        }, ShortcutContainer;
+    }();
+    jsCommon.ShortcutContainer = ShortcutContainer;
+}(jsCommon = jsCommon || {}), function(powerbi) {
+    powerbi.getTelemetrySamplingRules = function() {
+        return window.powerbi.telemetrySamplingRules;
+    }, powerbi.setTelemetrySamplingRules = function(rules) {
+        window.powerbi.telemetrySamplingRules = rules;
+    }, function(TelemetryCategory) {
+        TelemetryCategory[TelemetryCategory.Verbose = 0] = "Verbose", TelemetryCategory[TelemetryCategory.CustomerAction = 1] = "CustomerAction", 
+        TelemetryCategory[TelemetryCategory.CriticalError = 2] = "CriticalError", TelemetryCategory[TelemetryCategory.Trace = 3] = "Trace", 
+        TelemetryCategory[TelemetryCategory.SnapShotEmbedUserAction = 4] = "SnapShotEmbedUserAction";
+    }(powerbi.TelemetryCategory || (powerbi.TelemetryCategory = {})), function(LoggerServiceType) {
+        LoggerServiceType[LoggerServiceType.LocalyticsDeprecated = 1] = "LocalyticsDeprecated", 
+        LoggerServiceType[LoggerServiceType.AppInsightDeprecated = 2] = "AppInsightDeprecated", 
+        LoggerServiceType[LoggerServiceType.AppInsight = 4] = "AppInsight", LoggerServiceType[LoggerServiceType.Etw = 8] = "Etw", 
+        LoggerServiceType[LoggerServiceType.Mobile = 16] = "Mobile", LoggerServiceType[LoggerServiceType.WinJs = 32] = "WinJs", 
+        LoggerServiceType[LoggerServiceType.Designer = 64] = "Designer";
+    }(powerbi.LoggerServiceType || (powerbi.LoggerServiceType = {}));
+    var DeferredTelemetryEvent = function() {
+        function DeferredTelemetryEvent(event, end) {
+            var _this = this;
+            this.end = end, this.event = event, this.promise = new powerbi.Promise(function(resolve, reject) {
+                _this.onResolve = resolve, _this.onReject = reject;
+            }), this.isEnded = !1;
+        }
+        return DeferredTelemetryEvent.prototype.resolve = function() {
+            this.isActive() && (this.isEnded = !0, this.end && this.end(this.event), this.onResolve(this.event));
+        }, DeferredTelemetryEvent.prototype.cancel = function(ignorable) {
+            return this.event.info.isCancelled = !0, (this.event.info.isIgnorable = ignorable) ? this.resolve() : this.reject({
+                isCancelled: !0,
+                errorCode: "non-ignorable cancellation of deferred telemety event"
+            });
+        }, DeferredTelemetryEvent.prototype.reject = function(errorDetails) {
+            var event_1;
+            this.isActive() && (this.isEnded = !0, (event_1 = this.event).info.isError = !0, 
+            event_1.info.errorSource = errorDetails && errorDetails.errorSource ? errorDetails.errorSource : "PowerBI", 
+            event_1.info.errorCode = errorDetails ? errorDetails.errorCode : "UnknownError", 
+            event_1.info.errorMessage = errorDetails ? errorDetails.errorMessage : void 0, event_1.info.asErrorCode = errorDetails && errorDetails.asErrorCode, 
+            this.end && this.end(event_1), this.onReject(event_1));
+        }, DeferredTelemetryEvent.prototype.isActive = function() {
+            return !this.isEnded;
+        }, DeferredTelemetryEvent;
+    }();
+    powerbi.DeferredTelemetryEvent = DeferredTelemetryEvent;
+}(powerbi = powerbi || {});

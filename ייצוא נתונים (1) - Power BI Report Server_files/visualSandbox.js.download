@@ -1,0 +1,1706 @@
+"use strict";
+
+var powerbi, __awaiter = this && this.__awaiter || function(thisArg, _arguments, P, generator) {
+    return new (P = P || Promise)(function(resolve, reject) {
+        function fulfilled(value) {
+            try {
+                step(generator.next(value));
+            } catch (e) {
+                reject(e);
+            }
+        }
+        function rejected(value) {
+            try {
+                step(generator.throw(value));
+            } catch (e) {
+                reject(e);
+            }
+        }
+        function step(result) {
+            var value;
+            result.done ? resolve(result.value) : ((value = result.value) instanceof P ? value : new P(function(resolve) {
+                resolve(value);
+            })).then(fulfilled, rejected);
+        }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+}, __generator = this && this.__generator || function(thisArg, body) {
+    var f, y, t, _ = {
+        label: 0,
+        sent: function() {
+            if (1 & t[0]) throw t[1];
+            return t[1];
+        },
+        trys: [],
+        ops: []
+    }, g = {
+        next: verb(0),
+        throw: verb(1),
+        return: verb(2)
+    };
+    return "function" == typeof Symbol && (g[Symbol.iterator] = function() {
+        return this;
+    }), g;
+    function verb(n) {
+        return function(v) {
+            return function(op) {
+                if (f) throw new TypeError("Generator is already executing.");
+                for (;_; ) try {
+                    if (f = 1, y && (t = 2 & op[0] ? y.return : op[0] ? y.throw || ((t = y.return) && t.call(y), 
+                    0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+                    switch (y = 0, (op = t ? [ 2 & op[0], t.value ] : op)[0]) {
+                      case 0:
+                      case 1:
+                        t = op;
+                        break;
+
+                      case 4:
+                        return _.label++, {
+                            value: op[1],
+                            done: !1
+                        };
+
+                      case 5:
+                        _.label++, y = op[1], op = [ 0 ];
+                        continue;
+
+                      case 7:
+                        op = _.ops.pop(), _.trys.pop();
+                        continue;
+
+                      default:
+                        if (!(t = 0 < (t = _.trys).length && t[t.length - 1]) && (6 === op[0] || 2 === op[0])) {
+                            _ = 0;
+                            continue;
+                        }
+                        if (3 === op[0] && (!t || op[1] > t[0] && op[1] < t[3])) {
+                            _.label = op[1];
+                            break;
+                        }
+                        if (6 === op[0] && _.label < t[1]) {
+                            _.label = t[1], t = op;
+                            break;
+                        }
+                        if (t && _.label < t[2]) {
+                            _.label = t[2], _.ops.push(op);
+                            break;
+                        }
+                        t[2] && _.ops.pop(), _.trys.pop();
+                        continue;
+                    }
+                    op = body.call(thisArg, _);
+                } catch (e) {
+                    op = [ 6, e ], y = 0;
+                } finally {
+                    f = t = 0;
+                }
+                if (5 & op[0]) throw op[1];
+                return {
+                    value: op[0] ? op[1] : void 0,
+                    done: !0
+                };
+            }([ n, v ]);
+        };
+    }
+};
+
+!function(powerbi) {
+    !function(visualSandbox) {
+        var commonGlobals = window;
+        function getResourceLoaderUrl() {
+            return window.resourceLoaderUrl || "/explore/resourcePackageItem/";
+        }
+        visualSandbox.getResourceLoaderUrl = getResourceLoaderUrl, visualSandbox.createJQueryResourceItemProxy = function(promiseFactory) {
+            return new ResourceItemProxy(promiseFactory);
+        };
+        var ResourceItemProxy = function() {
+            function ResourceItemProxy(promiseFactory) {
+                this.promiseFactory = promiseFactory;
+            }
+            return ResourceItemProxy.prototype.get = function(resourcePackageId, name, resourceToLoad) {
+                var deferred = this.promiseFactory.defer(), clusterUri = commonGlobals.clusterUri, headers = window.powerBIAccessToken;
+                top && top.powerBIAccessToken && (headers = top.powerBIAccessToken);
+                var resourceLoaderUri = getResourceLoaderUrl(), headers = {
+                    authorization: "Bearer " + headers
+                };
+                window.isAnonymousEmbed && (clusterUri = window.clusterApiUri, resourceLoaderUri = window.resourceLoaderUrl + resourcePackageId + "/", 
+                headers["X-PowerBI-ResourceKey"] = window.powerBIResourceKey);
+                resourceToLoad = clusterUri + resourceLoaderUri + encodeURIComponent(resourceToLoad);
+                return $.ajax({
+                    url: resourceToLoad,
+                    headers: headers,
+                    dataType: "string"
+                }).then(function(data) {
+                    return deferred.resolve(data);
+                }, function(err) {
+                    return deferred.reject(err);
+                }), deferred.promise;
+            }, ResourceItemProxy.prototype.getBlob = function(resourcePackageId, name, path) {
+                return powerbi.createJQueryPromiseFactory().reject();
+            }, ResourceItemProxy;
+        }();
+    }(powerbi.visualSandbox || (powerbi.visualSandbox = {}));
+}(powerbi = powerbi || {}), function(powerbi) {
+    !function(visualSandbox) {
+        var visualHost = powerbi.visualHost, ResourcePackageItemType = powerbi.contracts.ResourcePackageItemType;
+        visualSandbox.createResourceLoaderHost = function() {
+            var services = powerbi.createJQueryPromiseFactory(), services = {
+                messageProxy: visualHost.createWindowMessageProxy(services, window.parent),
+                promiseFactory: services,
+                resourceProvider: {
+                    get: function(key) {
+                        return key;
+                    },
+                    getOptional: function(key) {
+                        return key;
+                    },
+                    format: function(key) {
+                        return key;
+                    }
+                }
+            };
+            return new ResourceLoaderHost(services);
+        };
+        var ResourceLoaderHost = function() {
+            function ResourceLoaderHost(services) {
+                var _this = this;
+                services.messageProxy, services.promiseFactory, this.messageProxy = services.messageProxy, 
+                this.promiseFactory = services.promiseFactory, this.resourceProvider = services.resourceProvider, 
+                this.messageProxy.on(visualHost.events.WindowMessageProxyMessageEvent, function(e) {
+                    return _this.onMessageReceived(e);
+                });
+            }
+            return ResourceLoaderHost.prototype.onMessageReceived = function(e) {
+                if ("loadVisualPluginWithContent" === e.message.eventName) return this.loadVisualPluginWithContent.apply(this, e.message.arguments);
+            }, ResourceLoaderHost.prototype.loadVisualPluginWithContent = function(jsContent) {
+                var deferred = this.promiseFactory.defer(), name = jsContent.pluginName, cssContent = jsContent.mappedPluginContent, jsContent = cssContent[ResourcePackageItemType.CustomVisualJavascript].content, cssContent = cssContent[ResourcePackageItemType.CustomVisualsCss].content;
+                try {
+                    visualHost.resourceInjector.injectJsCode(name, jsContent), visualHost.resourceInjector.injectCssCode(name, cssContent);
+                    var plugin = powerbi.visuals.plugins[name];
+                    plugin.iconUrl = visualHost.visualPluginServiceHelpers.getPluginIconUrl(name), plugin.content = {
+                        js: jsContent,
+                        css: cssContent,
+                        iconBase64: plugin.iconUrl
+                    }, powerbi.extensibility.visualPluginAdapter.transformPlugin(plugin), plugin.capabilities.objects = powerbi.data.services.DataViewObjectDescriptorSerializer.serialize(plugin.capabilities.objects, this.resourceProvider), 
+                    deferred.resolve(plugin);
+                } catch (err) {
+                    deferred.reject(err);
+                }
+                return deferred.promise;
+            }, ResourceLoaderHost;
+        }();
+        function exportCreateResourceLoaderHostToGlobal() {
+            var orgCreateResourceLoaderHost;
+            exported || (window.powerbi || (window.powerbi = {}), window.powerbi.visualSandbox || (window.powerbi.visualSandbox = {}), 
+            orgCreateResourceLoaderHost = powerbi.visualSandbox.createResourceLoaderHost, window.powerbi.visualSandbox.createResourceLoaderHost = function() {
+                return orgCreateResourceLoaderHost();
+            }, exported = !0);
+        }
+        visualSandbox.ResourceLoaderHost = ResourceLoaderHost, visualSandbox.exportCreateResourceLoaderHostToGlobal = exportCreateResourceLoaderHostToGlobal;
+        var exported = !1;
+        exportCreateResourceLoaderHostToGlobal();
+    }(powerbi.visualSandbox || (powerbi.visualSandbox = {}));
+}(powerbi = powerbi || {}), function(powerbi) {
+    !function(visualSandbox) {
+        var DataViewMerger = powerbi.data.segmentation.DataViewMerger, DataViewObjectSerializer = powerbi.data.services.DataViewObjectSerializer, DataViewObjectDescriptorSerializer = powerbi.data.services.DataViewObjectDescriptorSerializer, VisualObjectInstanceSerializer = powerbi.visualHost.services.VisualObjectInstanceSerializer, VisualObjectRepetitionSerializer = powerbi.visualHost.services.VisualObjectRepetitionSerializer, VisualStyleSerializer = powerbi.visualHost.VisualStyleSerializer, createVisualApiAdapter = powerbi.extensibility.createVisualApiAdapter, Version = jsCommon.Version;
+        visualSandbox.relayMouseEvents = [ "click", "mouseup", "MSPointerUp", "pointerup" ], 
+        visualSandbox.relayTouchEvents = [ "tap", "touchend", "touchcancel" ], visualSandbox.relayUIEvents = visualSandbox.relayMouseEvents.concat(visualSandbox.relayTouchEvents), 
+        visualSandbox.relayUIEventProps = [ "type", "bubbles", "which", "buttons", "button", "ctrlKey", "altKey", "metaKey", "shiftKey", "x", "y", "clientX", "clientY", "pageX", "pageY", "movementX", "movementY", "layerX", "layerY", "changedTouches" ];
+        var SandboxPromise = function() {
+            function SandboxPromise(deferred) {
+                this.id = ++SandboxPromise.counter, this.deferred = deferred;
+            }
+            return SandboxPromise.getLastId = function() {
+                return SandboxPromise.counter;
+            }, SandboxPromise.counter = 0, SandboxPromise;
+        }();
+        visualSandbox.SandboxPromise = SandboxPromise;
+        var SandboxPromise2 = function() {
+            function SandboxPromise2(deferred) {
+                this.id = ++SandboxPromise2.counter, this.deferred = deferred;
+            }
+            return SandboxPromise2.getLastId = function() {
+                return SandboxPromise2.counter;
+            }, SandboxPromise2.counter = 0, SandboxPromise2;
+        }();
+        visualSandbox.SandboxPromise2 = SandboxPromise2;
+        var SandboxPromiseHandler = function() {
+            function SandboxPromiseHandler() {
+                this.promises = {}, this.promises2 = {};
+            }
+            return SandboxPromiseHandler.prototype.CreatePromise = function(promise) {
+                promise = new SandboxPromise(promise);
+                return this.promises[promise.id] = promise;
+            }, SandboxPromiseHandler.prototype.ResolvePromise = function(id, value) {
+                var promise = this.promises[id];
+                promise && (promise.deferred.resolve(value), this.promises[id] = null);
+            }, SandboxPromiseHandler.prototype.RejectPromise = function(id, reason) {
+                var promise = this.promises[id];
+                promise && (promise.deferred.reject(reason), this.promises[id] = null);
+            }, SandboxPromiseHandler.prototype.CreatePromise2 = function(promise2) {
+                promise2 = new SandboxPromise2(promise2);
+                return this.promises2[promise2.id] = promise2;
+            }, SandboxPromiseHandler.prototype.ResolvePromise2 = function(id, value) {
+                var promise2 = this.promises2[id];
+                promise2 && (promise2.deferred.resolve(value), this.promises2[id] = null);
+            }, SandboxPromiseHandler.prototype.RejectPromise2 = function(id, reason) {
+                var promise2 = this.promises2[id];
+                promise2 && (promise2.deferred.reject(reason), this.promises2[id] = null);
+            }, SandboxPromiseHandler;
+        }();
+        function getPlugins() {
+            return window.powerbi.visuals.plugins;
+        }
+        function injectCustomVisual(plugin, noIframe, isolate) {
+            var injectedPlugin = plugin.content, hasBeenInjected = plugin.hasBeenInjected || getPlugins() && getPlugins().hasOwnProperty(plugin.name) && getPlugins()[plugin.name].hasBeenInjected;
+            noIframe && hasBeenInjected || (powerbi.visualHost.resourceInjector.injectJsCode(plugin.name, injectedPlugin.js, isolate, plugin.apiVersion), 
+            powerbi.visualHost.resourceInjector.injectCssCode(plugin.name, injectedPlugin.css));
+            injectedPlugin = !plugin.apiVersion || Version.lt(plugin.apiVersion, {
+                major: 3,
+                minor: 0,
+                patch: 0
+            }) ? (getPlugins()[plugin.name], getPlugins()[plugin.name]) : (window[plugin.name], 
+            window[plugin.name].default);
+            return plugin.apiVersion && (injectedPlugin.iconUrl = plugin.iconUrl, injectedPlugin.capabilities = plugin.capabilities, 
+            injectedPlugin.localizationResources = plugin.localizationResources, injectedPlugin.isDeprecated = plugin.isDeprecated), 
+            noIframe && (injectedPlugin.hasBeenInjected = !0, injectedPlugin.approvedForNoIframe = !0, 
+            getPlugins()[plugin.name] = injectedPlugin), injectedPlugin;
+        }
+        visualSandbox.SandboxPromiseHandler = SandboxPromiseHandler, visualSandbox.createSandboxHost = function(element, isolate) {
+            void 0 === isolate && (isolate = !1);
+            var promiseFactory = powerbi.createJQueryPromiseFactory(), messageProxy = powerbi.visualHost.createWindowMessageProxy(promiseFactory, window.parent);
+            visualSandbox.SandboxVisualHostServices.initialize();
+            var resourceLoaderConstructionOptions = {
+                promiseFactory: promiseFactory
+            }, telemetryService = visualSandbox.createSandboxTelemetryProxyService(messageProxy), services = new SandboxPromiseHandler(), hostServicesObj = visualSandbox.createVisualHostServices(messageProxy, services), services = {
+                $element: element,
+                hostServices: hostServicesObj,
+                hostServicesControl: hostServicesObj,
+                dataProxy: function(promiseFactory) {
+                    var noOpTelemetryService = visualSandbox.createSandboxNoOpTelemetryProxyService(), plugins = {
+                        dsr: {
+                            name: "dsr",
+                            reader: function(h) {
+                                return new powerbi.data.dsr.DsrDataReader(h, {
+                                    execute: function() {
+                                        return promiseFactory.reject();
+                                    }
+                                }, noOpTelemetryService, {
+                                    dsrV2: !1
+                                }, null, void 0, void 0);
+                            }
+                        }
+                    }, dataReaderProvider = {
+                        promiseFactory: function() {
+                            return promiseFactory;
+                        }
+                    }, dataReaderProvider = powerbi.data.createDataReaderProvider(powerbi.data.createDataReaderFactory(plugins, {}), dataReaderProvider);
+                    return powerbi.data.createDataProxy(promiseFactory, dataReaderProvider, noOpTelemetryService);
+                }(promiseFactory),
+                promiseFactory: promiseFactory,
+                messageProxy: messageProxy,
+                resourceLoader: powerbi.visualHost.createResourceLoader(resourceLoaderConstructionOptions, null),
+                resourceProvider: {
+                    get: function(name) {
+                        return name;
+                    },
+                    getOptional: function(name) {
+                        return name;
+                    },
+                    format: function(name) {
+                        return name;
+                    }
+                },
+                telemetryProxyService: telemetryService,
+                instanceId: "",
+                sandboxPromiseHandler: services
+            };
+            return new SandboxHost(services, isolate);
+        }, visualSandbox.injectCustomVisual = injectCustomVisual;
+        var SandboxHost = function() {
+            function SandboxHost(services, isolate) {
+                var _this = this;
+                this.isolate = isolate = void 0 === isolate ? !1 : isolate, this.isVisualInitialized = !1, 
+                this.messageQueue = [], this.relayUIEventListener = function(DOMEvent) {
+                    DOMEvent = _.pick(DOMEvent.originalEvent, visualSandbox.relayUIEventProps);
+                    _this.messageProxy.postMessage({
+                        eventName: "onRelayUIEvent",
+                        arguments: [ DOMEvent ]
+                    });
+                }, this.container = services.$element, this.hostServices = services.hostServices, 
+                this.hostServicesControl = services.hostServicesControl, this.dataProxy = services.dataProxy, 
+                this.promiseFactory = services.promiseFactory, this.messageProxy = services.messageProxy, 
+                this.resourceLoader = services.resourceLoader, this.resourceProvider = services.resourceProvider, 
+                this.telemetryProxyService = services.telemetryProxyService, this.sandboxPromiseHandler = services.sandboxPromiseHandler, 
+                this.aggregatedDataViewSize = 0, this.dataViewSerializer = new visualSandbox.SandboxDataViewSerializer(), 
+                this.skipRedundantResize = !1, this.messageProxy.on(powerbi.visualHost.events.WindowMessageProxyMessageEvent, function(e) {
+                    return _this.onMessageReceived(e);
+                });
+            }
+            return Object.defineProperty(SandboxHost.prototype, "visual", {
+                get: function() {
+                    return this._visual;
+                },
+                enumerable: !1,
+                configurable: !0
+            }), SandboxHost.prototype.init = function(options) {
+                this.hostServices.initInstanceId(options.instanceId), this.hostServicesControl.initInstanceId(options.instanceId), 
+                this.style = VisualStyleSerializer.deserializeVisualStyle(options.style);
+                var initOptions = {
+                    animation: options.animation,
+                    element: this.container,
+                    host: this.hostServices,
+                    interactivity: options.interactivity,
+                    style: this.style,
+                    viewport: options.viewport,
+                    localizationResources: this.plugin.localizationResources,
+                    hostEnv: options.hostEnv,
+                    dataMultiSelectMode: options.dataMultiSelectMode
+                };
+                return this.featureSwitches = options.featureSwitches, this.skipRedundantResize = this.featureSwitches && this.featureSwitches.cvSkipExtraResize, 
+                this.attachRelayUIEventListener(), this.attachWindowResizeListener(), this.visual.init(initOptions);
+            }, SandboxHost.prototype.destroy = function() {
+                this.detachRelayUIEventListener(), this.detachWindowResizeListener(), this.messageProxy.off(powerbi.visualHost.events.WindowMessageProxyMessageEvent), 
+                this.messageProxy.destroy(), this.visual && this.visual.destroy && this.visual.destroy();
+            }, SandboxHost.prototype.categoriesExists = function(visualUpdateOptions) {
+                return !!(visualUpdateOptions && visualUpdateOptions.dataViews && 0 < visualUpdateOptions.dataViews.length && visualUpdateOptions.dataViews[0].categorical && visualUpdateOptions.dataViews[0].categorical.categories && 0 < visualUpdateOptions.dataViews[0].categorical.categories.length && visualUpdateOptions.dataViews[0].categorical.categories[0] && visualUpdateOptions.dataViews[0].categorical.categories[0].values);
+            }, SandboxHost.prototype.getHostCategoriesValues = function(categoriesValues, visualUpdateOptions, isCategoryDate) {
+                try {
+                    if (categoriesValues) {
+                        if (isCategoryDate) for (var i = 0; i < categoriesValues.length; i++) categoriesValues[i] && (categoriesValues[i] = new Date(categoriesValues[i]));
+                        visualUpdateOptions.dataViews[0].categorical.categories[0].values = categoriesValues;
+                    }
+                } catch (e) {
+                    this.sendError(e);
+                }
+                return visualUpdateOptions;
+            }, SandboxHost.prototype.update = function(eventArgs) {
+                var dataTransforms, visualUpdateOptions, _this = this, options = eventArgs.message.arguments[0];
+                this.plugin && this.plugin.apiVersion && !Version.lt(this.plugin.apiVersion, "2.0.0") ? (this.stringifiedDataView = options.serializedDataView ? options.serializedDataView.stringifiedDataView : null, 
+                visualUpdateOptions = options.serializedDataView ? [ this.dataViewSerializer.deserializeDataView(options.serializedDataView, Version.gt(this.plugin.apiVersion, "3.5.9")) ] : [], 
+                visualUpdateOptions = this.lastVisualUpdateOptions = {
+                    dataViews: visualUpdateOptions,
+                    suppressAnimations: options.suppressAnimations,
+                    viewMode: options.viewMode,
+                    editMode: options.editMode,
+                    viewport: options.viewport,
+                    type: options.type,
+                    operationKind: powerbi.VisualDataChangeOperationKind.Create,
+                    resizeMode: options.resizeMode,
+                    isInFocus: options.isInFocus,
+                    jsonFilters: options.jsonFilters || null,
+                    updateId: options.updateId
+                }, this.plugin && this.plugin.apiVersion && !Version.lt(this.plugin.apiVersion, "3.5.0") ? (this.onRestoreCvSelectionIds(options.selections, !Version.gt(this.plugin.apiVersion, "2.4.0")), 
+                this.fixUpdateOptionsAndUpdateVisual(visualUpdateOptions, eventArgs, options)) : (this.fixUpdateOptionsAndUpdateVisual(visualUpdateOptions, eventArgs, options), 
+                this.onRestoreCvSelectionIds(options.selections, !Version.gt(this.plugin.apiVersion, "2.4.0")))) : (options.dataTransforms && (dataTransforms = powerbi.data.services.DataViewTransformActionsSerializer.deserializeDataViewTransformActions(options.dataTransforms, this.plugin.capabilities || {})), 
+                this.transformDataViewSource(options.dataViewSource, dataTransforms, !0).then(function(visualUpdateOptions) {
+                    visualUpdateOptions = _this.lastVisualUpdateOptions = {
+                        dataViews: visualUpdateOptions.dataViews,
+                        suppressAnimations: options.suppressAnimations,
+                        viewMode: options.viewMode,
+                        editMode: options.editMode,
+                        viewport: options.viewport,
+                        type: options.type,
+                        operationKind: powerbi.VisualDataChangeOperationKind.Create,
+                        resizeMode: options.resizeMode,
+                        isInFocus: options.isInFocus,
+                        jsonFilters: options.jsonFilters || null,
+                        updateId: options.updateId
+                    };
+                    _this.visualHasNullFilter(dataTransforms) && _this.onRestoreSelection(null), _this.fixUpdateOptionsAndUpdateVisual(visualUpdateOptions, eventArgs, options);
+                }).catch(function(err) {
+                    return _this.sendError(err);
+                }));
+            }, SandboxHost.prototype.visualHasNullFilter = function(general) {
+                var _e, _g;
+                if (null !== (_e = null === (_e = null === (_e = null === (_e = null === (_e = this.plugin) || void 0 === _e ? void 0 : _e.capabilities) || void 0 === _e ? void 0 : _e.objects) || void 0 === _e ? void 0 : _e.general) || void 0 === _e ? void 0 : _e.properties) && void 0 !== _e && _e.filter) {
+                    general = null === (general = null == general ? void 0 : general.objects) || void 0 === general ? void 0 : general.general;
+                    if (general && 0 < general.length && null !== (_g = general[0]) && void 0 !== _g && _g.properties && !general[0].properties.filter) return !0;
+                }
+                return !1;
+            }, SandboxHost.prototype.updateWithCachedData = function(eventArgs) {
+                var dataTransforms, isCachedDataAndApi2, options = eventArgs.message.arguments[0];
+                this.plugin && this.plugin.apiVersion && !Version.lt(this.plugin.apiVersion, "2.0.0") ? (this.lastVisualUpdateOptions.dataViews && this.lastVisualUpdateOptions.dataViews[0] && this.lastVisualUpdateOptions.dataViews[0].metadata && (isCachedDataAndApi2 = this.lastVisualUpdateOptions.dataViews[0].metadata.segment, 
+                this.lastVisualUpdateOptions.dataViews[0].metadata = options.dataViewMetadata ? JSON.parse(options.dataViewMetadata) : void 0, 
+                this.lastVisualUpdateOptions.dataViews[0].metadata.segment = isCachedDataAndApi2), 
+                visualUpdateOptions = this.lastVisualUpdateOptions.dataViews, isCachedDataAndApi2 = !0) : (options.dataTransforms && (dataTransforms = powerbi.data.services.DataViewTransformActionsSerializer.deserializeDataViewTransformActions(options.dataTransforms, this.plugin.capabilities || {})), 
+                this.lastDataViewTransformApplyOptions.transforms = dataTransforms, visualUpdateOptions = powerbi.data.DataViewTransform.apply(this.lastDataViewTransformApplyOptions).dataViews);
+                var visualUpdateOptions = this.lastVisualUpdateOptions = {
+                    dataViews: visualUpdateOptions,
+                    suppressAnimations: options.suppressAnimations,
+                    viewMode: options.viewMode,
+                    editMode: options.editMode,
+                    viewport: options.viewport,
+                    type: options.type,
+                    operationKind: powerbi.VisualDataChangeOperationKind.Create,
+                    resizeMode: options.resizeMode,
+                    isInFocus: options.isInFocus,
+                    jsonFilters: options.jsonFilters || null,
+                    updateId: options.updateId
+                };
+                this.fixUpdateOptionsAndUpdateVisual(visualUpdateOptions, eventArgs, options, isCachedDataAndApi2);
+            }, SandboxHost.prototype.loadResourcePackage = function(resourcePackage) {
+                var _this = this;
+                this.resourceLoader.loadVisualPlugin(resourcePackage).then(function(plugin) {
+                    _this.plugin = plugin, _this.createAdapter();
+                }).catch(function() {
+                    var error = new Error("Unable to load plugin, resource package id: " + resourcePackage.id);
+                    return _this.sendError(error);
+                });
+            }, SandboxHost.prototype.createAdapter = function() {
+                var error = this.plugin;
+                if (this.container.addClass("visual-" + error.name), this._visual = createVisualApiAdapter(error, error.create, this.promiseFactory, this.telemetryProxyService), 
+                !error || !this.visual) {
+                    error = new Error("Unable to create visual from plugin " + error.name);
+                    return this.sendError(error);
+                }
+                this.flushQueue(), this.isVisualInitialized = !0, this.sendSandboxReady();
+            }, SandboxHost.prototype.loadWithoutResourcePackage = function(plugin) {
+                var isolate = plugin.apiVersion ? this.isolate && Version.lt(plugin.apiVersion, "3.0.0") : this.isolate;
+                this.plugin = injectCustomVisual(plugin, !1, isolate), powerbi.extensibility.visualPluginAdapter.transformPlugin(this.plugin), 
+                this.createAdapter();
+            }, SandboxHost.prototype.enumerateObjectInstances = function(dontSerialize) {
+                if (this.visual.enumerateObjectInstances) {
+                    var visualObjectInstances = this.visual.enumerateObjectInstances(dontSerialize);
+                    if (visualObjectInstances) {
+                        var visualObjectEnumeration = visualObjectInstances, dontSerialize = this.plugin && this.plugin.apiVersion && !Version.lt(this.plugin.apiVersion, "2.0.0");
+                        return visualObjectEnumeration && visualObjectEnumeration.instances ? dontSerialize ? {
+                            instances: visualObjectEnumeration.instances,
+                            containers: visualObjectEnumeration.containers
+                        } : {
+                            instances: VisualObjectInstanceSerializer.serialize(visualObjectEnumeration.instances),
+                            containers: visualObjectEnumeration.containers ? VisualObjectInstanceSerializer.serializeContainers(visualObjectEnumeration.containers, this.resourceProvider) : null
+                        } : dontSerialize ? visualObjectInstances : VisualObjectInstanceSerializer.serialize(visualObjectInstances);
+                    }
+                }
+            }, SandboxHost.prototype.enumerateObjectRepetition = function() {
+                if (this.visual.enumerateObjectRepetition) {
+                    var visualObjectRepetition = this.visual.enumerateObjectRepetition();
+                    return visualObjectRepetition ? VisualObjectRepetitionSerializer.serialize(visualObjectRepetition) : void 0;
+                }
+            }, SandboxHost.prototype.sendUpdateResult = function() {
+                var containerChildCount = this.container.children("*").length;
+                this.messageProxy.postMessage({
+                    eventName: "onUpdateResult",
+                    arguments: [ containerChildCount ]
+                });
+            }, SandboxHost.prototype.sendSandboxReady = function() {
+                var proxyPlugin = this.plugin.capabilities;
+                proxyPlugin.objects && (proxyPlugin.objects = DataViewObjectDescriptorSerializer.serialize(this.plugin.capabilities.objects, this.resourceProvider));
+                proxyPlugin = {
+                    name: this.plugin.name,
+                    watermarkKey: this.plugin.watermarkKey,
+                    capabilities: proxyPlugin,
+                    class: this.plugin.class,
+                    iconUrl: this.plugin.iconUrl,
+                    custom: !0,
+                    create: function() {
+                        return null;
+                    }
+                };
+                this.messageProxy.postMessage({
+                    eventName: "onPluginReady",
+                    arguments: [ proxyPlugin ]
+                });
+            }, SandboxHost.prototype.flushQueue = function() {
+                for (;0 < this.messageQueue.length; ) {
+                    var message = this.messageQueue.shift();
+                    this.executeMessage(message);
+                }
+            }, SandboxHost.prototype.sendError = function(message, originMessage) {
+                message = {
+                    eventName: "onError",
+                    arguments: [],
+                    error: {
+                        id: originMessage ? originMessage.id : null,
+                        eventName: originMessage ? originMessage.eventName : null,
+                        name: message.name,
+                        message: message.message,
+                        pluginName: this.plugin.name
+                    }
+                };
+                this.messageProxy.postMessage(message);
+            }, SandboxHost.prototype.onMessageReceived = function(e) {
+                if (this.isVisualInitialized || "loadResourcePackage" === e.message.eventName || "loadWithoutResourcePackage" === e.message.eventName) return this.executeMessage(e);
+                this.messageQueue.push(e);
+            }, SandboxHost.prototype.executeMessage = function(e) {
+                var message = e.message;
+                try {
+                    if ($.isFunction(this[message.eventName])) return "update" === message.eventName || "updateWithCachedData" === message.eventName || "handleLoadMoreDataResult" === message.eventName ? this[message.eventName].call(this, e) : this[message.eventName].apply(this, message.arguments);
+                    if (this.visual && $.isFunction(this.visual[message.eventName])) return this.visual[message.eventName].apply(this.visual, message.arguments);
+                } catch (ex) {
+                    this.sendError(ex, message);
+                }
+            }, SandboxHost.prototype.transformDataViewSource = function(dataViewSource, dataTransforms, bypassConcatenation) {
+                var _this = this, deferred = this.promiseFactory.defer();
+                return (dataViewSource ? this.createDataView(dataViewSource) : this.promiseFactory.resolve({
+                    dataView: null
+                })).then(function(dataViews) {
+                    dataViews = powerbi.data.DataViewTransform.apply(_this.lastDataViewTransformApplyOptions = {
+                        prototype: dataViews.dataView,
+                        objectDescriptors: _this.plugin.capabilities ? _this.plugin.capabilities.objects : void 0,
+                        dataViewMappings: _this.plugin.capabilities ? _this.plugin.capabilities.dataViewMappings : void 0,
+                        dataRoles: _this.plugin.capabilities ? _this.plugin.capabilities.dataRoles : void 0,
+                        drillCapabilities: _this.plugin.capabilities && _this.plugin.capabilities.drilldown,
+                        expandCollapseCapabilties: _this.plugin.capabilities && _this.plugin.capabilities.expandCollapse,
+                        transforms: dataTransforms,
+                        colorAllocatorFactory: powerbi.visuals.createColorAllocatorFactory(),
+                        bypassConcatenation: bypassConcatenation,
+                        visualStyle: _this.style,
+                        keepAllMetadataColumnsCapability: !!_this.plugin.capabilities && _this.plugin.capabilities.keepAllMetadataColumns,
+                        featureSwitches: _this.featureSwitches
+                    }).dataViews;
+                    deferred.resolve({
+                        dataViews: dataViews
+                    });
+                }).catch(function(err) {
+                    return _this.sendError(err);
+                }), deferred.promise;
+            }, SandboxHost.prototype.createDataView = function(options) {
+                var _this = this, deferred = this.promiseFactory.defer(), options = {
+                    type: options.type,
+                    query: {
+                        dataSources: null,
+                        command: options.data
+                    }
+                };
+                return this.dataProxy.execute(options).then(function(validation) {
+                    validation = validation && validation.dataReaderResult ? validation.dataReaderResult.dataView : null, 
+                    validation = powerbi.DataViewAnalysis.validateAndReshape(validation, _this.plugin.capabilities ? _this.plugin.capabilities.dataViewMappings : null);
+                    deferred.resolve({
+                        dataView: validation.dataView
+                    });
+                }).catch(function(err) {
+                    return _this.sendError(err);
+                }), deferred.promise;
+            }, SandboxHost.prototype.attachWindowResizeListener = function() {
+                $(window).on("resize", this.windowResizeListener.bind(this)), $(window).trigger("resize");
+            }, SandboxHost.prototype.detachWindowResizeListener = function() {
+                $(window).off("resize");
+            }, SandboxHost.prototype.windowResizeListener = function() {
+                var height, width, visualUpdateOptions;
+                this.lastVisualUpdateOptions && (height = $(window).height(), width = $(window).width(), 
+                this.skipRedundantResize && this.lastVisualUpdateOptions.viewport && this.lastVisualUpdateOptions.viewport.width && this.lastVisualUpdateOptions.viewport.height && Math.abs(width - this.lastVisualUpdateOptions.viewport.width) <= 1 && Math.abs(height - this.lastVisualUpdateOptions.viewport.height) <= 1 || ((visualUpdateOptions = powerbi.Prototype.inherit(this.lastVisualUpdateOptions)).viewport = {
+                    width: width,
+                    height: height,
+                    scale: this.lastVisualUpdateOptions.viewport.scale
+                }, visualUpdateOptions.type = powerbi.VisualUpdateType.Resize, visualUpdateOptions.resizeMode = 1, 
+                this.visual.update(visualUpdateOptions)));
+            }, SandboxHost.prototype.attachRelayUIEventListener = function() {
+                this.container.on(visualSandbox.relayUIEvents.join(" "), this.relayUIEventListener);
+            }, SandboxHost.prototype.detachRelayUIEventListener = function() {
+                this.container.off(visualSandbox.relayUIEvents.join(" "), this.relayUIEventListener);
+            }, SandboxHost.prototype.handleLoadMoreDataResult = function(eventArgs) {
+                return __awaiter(this, void 0, powerbi.Promise, function() {
+                    var aggregateSegments, serializedDataView, dataViews, segment, message;
+                    return __generator(this, function(_a) {
+                        switch (_a.label) {
+                          case 0:
+                            return (aggregateSegments = eventArgs.message.arguments[1], this.plugin && this.plugin.apiVersion && !Version.lt(this.plugin.apiVersion, "2.0.0")) ? (serializedDataView = eventArgs.message.arguments[0]) && this.stringifiedDataView !== serializedDataView.stringifiedDataView ? (this.stringifiedDataView = serializedDataView.stringifiedDataView, 
+                            dataViews = [ this.dataViewSerializer.deserializeDataView(serializedDataView) ], 
+                            this.lastVisualUpdateOptions.type = powerbi.VisualUpdateType.Data, aggregateSegments ? (DataViewMerger.mergeDataViews(this.lastVisualUpdateOptions.dataViews[0], dataViews[0]), 
+                            this.lastVisualUpdateOptions.operationKind = powerbi.VisualDataChangeOperationKind.Append, 
+                            [ 4, this.aggregateDataViewSizeAndUpdateVisual(eventArgs.packedSize) ]) : [ 3, 2 ]) : [ 3, 4 ] : [ 3, 5 ];
+
+                          case 1:
+                            return _a.sent(), [ 3, 4 ];
+
+                          case 2:
+                            return this.lastVisualUpdateOptions.dataViews[0] = dataViews[0], this.lastVisualUpdateOptions.operationKind = powerbi.VisualDataChangeOperationKind.Segment, 
+                            [ 4, this.visual.update(this.lastVisualUpdateOptions) ];
+
+                          case 3:
+                            _a.sent(), _a.label = 4;
+
+                          case 4:
+                            return [ 3, 9 ];
+
+                          case 5:
+                            return (this.lastDataViewTransformApplyOptions && this.lastDataViewTransformApplyOptions.prototype, 
+                            message = eventArgs.message.arguments[0], segment = message ? message.dataReaderResult.dataView : null) ? (this.lastVisualUpdateOptions.type = powerbi.VisualUpdateType.Data, 
+                            aggregateSegments ? (DataViewMerger.mergeDataViews(this.lastDataViewTransformApplyOptions.prototype, segment), 
+                            this.lastVisualUpdateOptions.dataViews = powerbi.data.DataViewTransform.apply(this.lastDataViewTransformApplyOptions).dataViews, 
+                            this.lastVisualUpdateOptions.operationKind = powerbi.VisualDataChangeOperationKind.Append, 
+                            [ 4, this.aggregateDataViewSizeAndUpdateVisual(eventArgs.packedSize) ]) : [ 3, 7 ]) : [ 3, 9 ];
+
+                          case 6:
+                            return _a.sent(), [ 3, 9 ];
+
+                          case 7:
+                            return this.lastVisualUpdateOptions.dataViews[0] = segment, this.lastVisualUpdateOptions.operationKind = powerbi.VisualDataChangeOperationKind.Segment, 
+                            [ 4, this.visual.update(this.lastVisualUpdateOptions) ];
+
+                          case 8:
+                            _a.sent(), _a.label = 9;
+
+                          case 9:
+                            return message = {
+                                eventName: "stopProgressBar",
+                                arguments: []
+                            }, this.messageProxy.postMessage(message), [ 2 ];
+                        }
+                    });
+                });
+            }, SandboxHost.prototype.aggregateDataViewSizeAndUpdateVisual = function(packedSize) {
+                return __awaiter(this, void 0, powerbi.Promise, function() {
+                    return __generator(this, function(_a) {
+                        switch (_a.label) {
+                          case 0:
+                            return this.aggregatedDataViewSize += packedSize, 104857600 <= this.aggregatedDataViewSize ? this.hostServicesControl.enableLoadMoreData(!1) : this.hostServicesControl.enableLoadMoreData(!0), 
+                            [ 4, this.visual.update(this.lastVisualUpdateOptions) ];
+
+                          case 1:
+                            return _a.sent(), [ 2 ];
+                        }
+                    });
+                });
+            }, SandboxHost.prototype.handleGetResourceUrlResult = function(result) {
+                result.isError ? this.sandboxPromiseHandler.RejectPromise(result.promiseId, result.payload) : this.sandboxPromiseHandler.ResolvePromise(result.promiseId, result.payload);
+            }, SandboxHost.prototype.handleGetAADAuthenticationTokenResult = function(result) {
+                result.isError ? this.sandboxPromiseHandler.RejectPromise(result.promiseId, result.payload) : this.sandboxPromiseHandler.ResolvePromise(result.promiseId, result);
+            }, SandboxHost.prototype.handleGetAADTokenResult = function(result) {
+                result.isError ? this.sandboxPromiseHandler.RejectPromise(result.promiseId, result.payload) : this.sandboxPromiseHandler.ResolvePromise(result.promiseId, result.payload);
+            }, SandboxHost.prototype.handleGetWACTokenResult = function(result) {
+                result.isError ? this.sandboxPromiseHandler.RejectPromise2(result.promiseId, result.payload || "") : this.sandboxPromiseHandler.ResolvePromise2(result.promiseId, result.wacToken);
+            }, SandboxHost.prototype.handleIsStorageEnabled = function(response) {
+                this.sandboxPromiseHandler.ResolvePromise(response.promiseId, response.enabled);
+            }, SandboxHost.prototype.handleGetStorageData = function(response) {
+                response.data ? this.sandboxPromiseHandler.ResolvePromise(response.promiseId, response.data) : this.sandboxPromiseHandler.RejectPromise(response.promiseId);
+            }, SandboxHost.prototype.handleExportVisualsContent = function(response) {
+                void 0 !== response.data ? this.sandboxPromiseHandler.ResolvePromise(response.promiseId, response.data) : this.sandboxPromiseHandler.RejectPromise(response.promiseId);
+            }, SandboxHost.prototype.handleSetStorageData = function(response) {
+                response.isError ? this.sandboxPromiseHandler.RejectPromise(response.promiseId) : this.sandboxPromiseHandler.ResolvePromise(response.promiseId, response.freeSpace);
+            }, SandboxHost.prototype.handleModalDialogResult = function(response) {
+                response.isError ? this.sandboxPromiseHandler.RejectPromise(response.promiseId, response.data) : this.sandboxPromiseHandler.ResolvePromise(response.promiseId, response.data);
+            }, SandboxHost.prototype.handleLicenseResult = function(response) {
+                response.licenseInfoResult ? this.sandboxPromiseHandler.ResolvePromise(response.promiseId, response.licenseInfoResult) : this.sandboxPromiseHandler.RejectPromise(response.promiseId);
+            }, SandboxHost.prototype.handleLicenseNotificationResult = function(response) {
+                null == response.licenseNotificationResult ? this.sandboxPromiseHandler.RejectPromise(response.promiseId) : this.sandboxPromiseHandler.ResolvePromise(response.promiseId, response.licenseNotificationResult);
+            }, SandboxHost.prototype.onRestoreSelection = function(selectionIds) {
+                var selectionManager = this.hostServices.selectionManager;
+                selectionManager && (selectionIds && selectionIds.selection ? (selectionIds = selectionIds.selection.map(function(selector) {
+                    return powerbi.visuals.SelectionId.fromSelectorsByColumn(DataViewObjectSerializer.deserializeSelectorsByColumn(selector));
+                }), selectionManager.setSelectionIds(selectionIds), selectionManager.invokeOnSelectCallback(selectionIds)) : (selectionManager.setSelectionIds([]), 
+                selectionManager.invokeOnSelectCallback([])));
+            }, SandboxHost.prototype.onRestoreCvSelectionIds = function(options, invokeCallback) {
+                void 0 === invokeCallback && (invokeCallback = !0);
+                var selectionIds, selectionManager = this.hostServices.selectionManager;
+                selectionManager && (selectionIds = [], options ? (selectionIds = _.map(options, function(restoreCvOption) {
+                    return new powerbi.visuals.CustomVisualSelectionId(restoreCvOption.serializedDataMap, restoreCvOption.measures);
+                }), selectionManager.setSelectionIds(selectionIds)) : selectionManager.setSelectionIds([]), 
+                invokeCallback && selectionManager.invokeOnSelectCallback(selectionIds));
+            }, SandboxHost.prototype.fixUpdateOptionsAndUpdateVisual = function(visualUpdateOptions, eventArgs, options, isCachedDataAndApi2) {
+                (isCachedDataAndApi2 = void 0 === isCachedDataAndApi2 ? !1 : isCachedDataAndApi2) || (visualUpdateOptions = this.categoriesExists(visualUpdateOptions) ? this.getHostCategoriesValues(options.categoriesValues, visualUpdateOptions, options.isCategoryDate) : visualUpdateOptions, 
+                this.hostServicesControl.enableLoadMoreData(!0), this.aggregatedDataViewSize = eventArgs.packedSize), 
+                this.visual.update(visualUpdateOptions), this.sendUpdateResult();
+            }, SandboxHost;
+        }();
+        function exportCreateSandboxToGlobal() {
+            var orgCreateSandboxHost;
+            exported || (window.powerbi || (window.powerbi = {}), window.powerbi.visualSandbox || (window.powerbi.visualSandbox = {}), 
+            orgCreateSandboxHost = powerbi.visualSandbox.createSandboxHost, window.powerbi.visualSandbox.createSandboxHost = function(element, isolate) {
+                return orgCreateSandboxHost(element, isolate = void 0 === isolate ? !1 : isolate);
+            }, exported = !0);
+        }
+        visualSandbox.SandboxHost = SandboxHost, visualSandbox.exportCreateSandboxToGlobal = exportCreateSandboxToGlobal;
+        var exported = !1;
+        exportCreateSandboxToGlobal(), visualSandbox.exportCreateResourceLoaderHostToGlobal();
+    }(powerbi.visualSandbox || (powerbi.visualSandbox = {}));
+}(powerbi = powerbi || {}), function(powerbi) {
+    !function(visualSandbox) {
+        var DataViewObjectSerializer = powerbi.data.services.DataViewObjectSerializer, CustomVisualSelectionId = powerbi.visuals.CustomVisualSelectionId;
+        visualSandbox.createSandboxVisualHostTooltipService = function(messageProxy) {
+            return new SandboxVisualHostTooltipService(messageProxy);
+        };
+        var SandboxVisualHostTooltipService = function() {
+            function SandboxVisualHostTooltipService(messageProxy) {
+                this.messageProxy = messageProxy, this.rootElement = window.document.body;
+            }
+            return SandboxVisualHostTooltipService.prototype.serializeIdentities = function(identities) {
+                return identities && identities[0] instanceof CustomVisualSelectionId ? identities : identities && _(identities).map(function(value) {
+                    return DataViewObjectSerializer.serializeSelectorsByColumn(value);
+                }).compact().value();
+            }, SandboxVisualHostTooltipService.prototype.show = function(proxyArgs) {
+                proxyArgs = proxyArgs && {
+                    coordinates: proxyArgs.coordinates,
+                    dataItems: proxyArgs.dataItems,
+                    identities: this.serializeIdentities(proxyArgs.identities),
+                    isTouchEvent: proxyArgs.isTouchEvent
+                };
+                this.messageProxy.postMessage({
+                    eventName: "showTooltip",
+                    arguments: [ proxyArgs ]
+                });
+            }, SandboxVisualHostTooltipService.prototype.move = function(proxyArgs) {
+                proxyArgs = proxyArgs && {
+                    coordinates: proxyArgs.coordinates,
+                    dataItems: proxyArgs.dataItems,
+                    identities: this.serializeIdentities(proxyArgs.identities),
+                    isTouchEvent: proxyArgs.isTouchEvent
+                };
+                this.messageProxy.postMessage({
+                    eventName: "moveTooltip",
+                    arguments: [ proxyArgs ]
+                });
+            }, SandboxVisualHostTooltipService.prototype.hide = function(args) {
+                this.messageProxy.postMessage({
+                    eventName: "hideTooltip",
+                    arguments: [ args ]
+                });
+            }, SandboxVisualHostTooltipService.prototype.visible = function() {
+                return !1;
+            }, SandboxVisualHostTooltipService.prototype.container = function() {
+                return this.rootElement;
+            }, SandboxVisualHostTooltipService.prototype.enabled = function() {
+                return !0;
+            }, SandboxVisualHostTooltipService;
+        }();
+    }(powerbi.visualSandbox || (powerbi.visualSandbox = {}));
+}(powerbi = powerbi || {}), function(powerbi) {
+    !function(visualSandbox) {
+        var convertVisualEventType = powerbi.extensibility.convertVisualEventType;
+        visualSandbox.createSandboxVisualHostTelemetryService = function(messageProxy, instanceId) {
+            return new SandboxVisualHostTelemetryService(messageProxy, instanceId);
+        };
+        var SandboxVisualHostTelemetryService = function() {
+            function SandboxVisualHostTelemetryService(messageProxy, instanceId) {
+                this.messageProxy = messageProxy, this.instanceId = instanceId;
+            }
+            return SandboxVisualHostTelemetryService.prototype.trace = function(type, payload) {
+                this.messageProxy.postMessageAsync({
+                    eventName: "logVisualEvent",
+                    arguments: [ convertVisualEventType(type), {
+                        instanceId: this.instanceId,
+                        payload: payload
+                    } ]
+                });
+            }, SandboxVisualHostTelemetryService;
+        }();
+    }(powerbi.visualSandbox || (powerbi.visualSandbox = {}));
+}(powerbi = powerbi || {}), function(powerbi) {
+    !function(visualSandbox) {
+        visualSandbox.createSandboxVisualHostLocalStorageService = function(messageProxy, promiseFactory, sandboxPromiseHandler) {
+            return new SandboxVisualHostLocalStorageService(messageProxy, promiseFactory, sandboxPromiseHandler);
+        };
+        var SandboxVisualHostLocalStorageService = function() {
+            function SandboxVisualHostLocalStorageService(messageProxy, promiseFactory, sandboxPromiseHandler) {
+                this.messageProxy = messageProxy, this.promiseFactory = promiseFactory, this.sandboxPromiseHandler = sandboxPromiseHandler;
+            }
+            return SandboxVisualHostLocalStorageService.prototype.isStorageEnabled = function() {
+                var promise = this.sandboxPromiseHandler.CreatePromise(this.promiseFactory.defer()), message = {
+                    eventName: "isStorageEnabled",
+                    arguments: [ promise.id ]
+                };
+                return this.messageProxy.postMessage(message), promise.deferred.promise;
+            }, SandboxVisualHostLocalStorageService.prototype.getStorageData = function(message) {
+                var promise = this.sandboxPromiseHandler.CreatePromise(this.promiseFactory.defer()), message = {
+                    eventName: "getStorageData",
+                    arguments: [ message, promise.id ]
+                };
+                return this.messageProxy.postMessage(message), promise.deferred.promise;
+            }, SandboxVisualHostLocalStorageService.prototype.setStorageData = function(key, message) {
+                var promise = this.sandboxPromiseHandler.CreatePromise(this.promiseFactory.defer()), message = {
+                    eventName: "setStorageData",
+                    arguments: [ key, message, promise.id ]
+                };
+                return this.messageProxy.postMessage(message), promise.deferred.promise;
+            }, SandboxVisualHostLocalStorageService.prototype.removeStorageData = function(key) {
+                this.messageProxy.postMessage({
+                    eventName: "removeStorageData",
+                    arguments: [ key ]
+                });
+            }, SandboxVisualHostLocalStorageService;
+        }();
+        visualSandbox.SandboxVisualHostLocalStorageService = SandboxVisualHostLocalStorageService;
+    }(powerbi.visualSandbox || (powerbi.visualSandbox = {}));
+}(powerbi = powerbi || {}), function(powerbi) {
+    !function(visualSandbox) {
+        visualSandbox.createSandboxVisualHostEventService = function(messageProxy, instanceId) {
+            return new SandboxVisualHostEventService(messageProxy, instanceId);
+        };
+        var SandboxVisualHostEventService = function() {
+            function SandboxVisualHostEventService(messageProxy, instanceId) {
+                this.messageProxy = messageProxy, this.instanceId = instanceId;
+            }
+            return SandboxVisualHostEventService.prototype.renderingStarted = function(message) {
+                message = {
+                    eventName: "renderingStarted",
+                    arguments: [ this.instanceId, message.updateId ]
+                };
+                this.messageProxy.postMessage(message);
+            }, SandboxVisualHostEventService.prototype.renderingFinished = function(message) {
+                message = {
+                    eventName: "renderingFinished",
+                    arguments: [ this.instanceId, message.updateId ]
+                };
+                this.messageProxy.postMessage(message);
+            }, SandboxVisualHostEventService.prototype.renderingFailed = function(options, message) {
+                message = {
+                    eventName: "renderingFailed",
+                    arguments: [ this.instanceId, options.updateId, message ]
+                };
+                this.messageProxy.postMessage(message);
+            }, SandboxVisualHostEventService;
+        }();
+        visualSandbox.SandboxVisualHostEventService = SandboxVisualHostEventService;
+    }(powerbi.visualSandbox || (powerbi.visualSandbox = {}));
+}(powerbi = powerbi || {}), function(powerbi) {
+    !function(visualSandbox) {
+        var proxiedTelemetryEventType;
+        !function(proxiedTelemetryEventType) {
+            proxiedTelemetryEventType.VisualApiUsage = "VisualApiUsage", proxiedTelemetryEventType.VisualException = "VisualException";
+        }(proxiedTelemetryEventType = visualSandbox.proxiedTelemetryEventType || (visualSandbox.proxiedTelemetryEventType = {})), 
+        visualSandbox.createSandboxTelemetryProxyService = function(windowMessageProxy) {
+            return new SandboxTelemetryProxyService(windowMessageProxy);
+        };
+        var SandboxTelemetryProxyService = function() {
+            function SandboxTelemetryProxyService(windowMessageProxy) {
+                this.windowMessageProxy = windowMessageProxy;
+            }
+            return SandboxTelemetryProxyService.prototype.getOpenActivityById = function(id) {}, 
+            SandboxTelemetryProxyService.prototype.suspend = function() {}, SandboxTelemetryProxyService.prototype.resume = function() {}, 
+            SandboxTelemetryProxyService.prototype.flush = function() {}, SandboxTelemetryProxyService.prototype.restart = function() {}, 
+            SandboxTelemetryProxyService.prototype.stopActivity = function(event, errorDetails, cleanChild) {}, 
+            SandboxTelemetryProxyService.prototype.startPerfEventDeprecated = function(scope, eventFactory) {
+                for (var args = [], _i = 2; _i < arguments.length; _i++) args[_i - 2] = arguments[_i];
+                return new EmptyDeferredTelemetryEvent({
+                    info: {}
+                });
+            }, SandboxTelemetryProxyService.prototype.logEvent = function(eventFactory, parameters) {
+                return _.isArray(parameters), eventFactory === powerbi.telemetry.VisualApiUsage ? this.windowMessageProxy.postMessageAsync({
+                    eventName: "logEvent",
+                    arguments: [ proxiedTelemetryEventType.VisualApiUsage, parameters ]
+                }) : eventFactory === powerbi.telemetry.VisualException && this.windowMessageProxy.postMessageAsync({
+                    eventName: "logEvent",
+                    arguments: [ proxiedTelemetryEventType.VisualException, parameters ]
+                }), null;
+            }, SandboxTelemetryProxyService.prototype.logTelemetryData = function(parent, eventName, info) {
+                return null;
+            }, SandboxTelemetryProxyService.prototype.logChildEvent = function(parent, eventFactory) {
+                for (var args = [], _i = 2; _i < arguments.length; _i++) args[_i - 2] = arguments[_i];
+            }, SandboxTelemetryProxyService.prototype.startActivity = function(scope, eventFactory) {
+                for (var args = [], _i = 2; _i < arguments.length; _i++) args[_i - 2] = arguments[_i];
+                return new EmptyDeferredTelemetryEvent({
+                    info: {}
+                });
+            }, SandboxTelemetryProxyService.prototype.startChildActivity = function(parent, eventFactory) {
+                for (var args = [], _i = 2; _i < arguments.length; _i++) args[_i - 2] = arguments[_i];
+            }, SandboxTelemetryProxyService.prototype.startEvent = function(eventFactory) {
+                for (var args = [], _i = 1; _i < arguments.length; _i++) args[_i - 1] = arguments[_i];
+                return new EmptyDeferredTelemetryEvent({
+                    info: {}
+                });
+            }, SandboxTelemetryProxyService.prototype.startMonitoredActivity = function(parentActivity, eventName, info) {
+                var event = {
+                    info: {}
+                };
+                return {
+                    activityEvent: event,
+                    activityDeferred: new EmptyDeferredTelemetryEvent(event)
+                };
+            }, SandboxTelemetryProxyService.prototype.startChildEvent = function(parent, eventFactory) {
+                for (var args = [], _i = 2; _i < arguments.length; _i++) args[_i - 2] = arguments[_i];
+                return new EmptyDeferredTelemetryEvent({
+                    info: {}
+                });
+            }, SandboxTelemetryProxyService.prototype.logTrace = function(trace) {}, Object.defineProperty(SandboxTelemetryProxyService.prototype, "sessionId", {
+                get: function() {},
+                enumerable: !1,
+                configurable: !0
+            }), Object.defineProperty(SandboxTelemetryProxyService.prototype, "appInstanceId", {
+                get: function() {},
+                enumerable: !1,
+                configurable: !0
+            }), Object.defineProperty(SandboxTelemetryProxyService.prototype, "root", {
+                get: function() {},
+                enumerable: !1,
+                configurable: !0
+            }), SandboxTelemetryProxyService.prototype.setHostInfo = function(key, value) {}, 
+            SandboxTelemetryProxyService.prototype.getHostData = function() {}, SandboxTelemetryProxyService.prototype.setExpAssignmentContext = function(expAssignmentContext) {}, 
+            SandboxTelemetryProxyService;
+        }(), EmptyDeferredTelemetryEvent = function() {
+            function EmptyDeferredTelemetryEvent(event) {
+                var _this = this;
+                this.event = event, this.promise = new powerbi.Promise(function(r, rej) {
+                    _this.onResolve = r, _this.onReject = rej;
+                });
+            }
+            return EmptyDeferredTelemetryEvent.prototype.resolve = function() {
+                this.isEnded = !0, this.onResolve();
+            }, EmptyDeferredTelemetryEvent.prototype.cancel = function(ignorable) {
+                return ignorable ? this.resolve() : this.reject({
+                    isCancelled: !0,
+                    errorCode: "non-ignorable cancellation of deferred telemety event"
+                });
+            }, EmptyDeferredTelemetryEvent.prototype.reject = function(errorDetails) {
+                this.isEnded = !0, this.onReject();
+            }, EmptyDeferredTelemetryEvent.prototype.isActive = function() {
+                return !this.isEnded;
+            }, EmptyDeferredTelemetryEvent;
+        }();
+        visualSandbox.EmptyDeferredTelemetryEvent = EmptyDeferredTelemetryEvent;
+    }(powerbi.visualSandbox || (powerbi.visualSandbox = {}));
+}(powerbi = powerbi || {}), function(powerbi) {
+    !function(visualSandbox) {
+        visualSandbox.createSandboxNoOpTelemetryProxyService = function() {
+            return new SandboxNoOpTelemetryProxyService();
+        };
+        var SandboxNoOpTelemetryProxyService = function() {
+            function SandboxNoOpTelemetryProxyService() {}
+            return SandboxNoOpTelemetryProxyService.prototype.getOpenActivityById = function(id) {}, 
+            SandboxNoOpTelemetryProxyService.prototype.suspend = function() {}, SandboxNoOpTelemetryProxyService.prototype.resume = function() {}, 
+            SandboxNoOpTelemetryProxyService.prototype.flush = function() {}, SandboxNoOpTelemetryProxyService.prototype.restart = function() {}, 
+            SandboxNoOpTelemetryProxyService.prototype.stopActivity = function(event, errorDetails, cleanChild) {}, 
+            SandboxNoOpTelemetryProxyService.prototype.startPerfEventDeprecated = function(scope, eventFactory) {
+                for (var args = [], _i = 2; _i < arguments.length; _i++) args[_i - 2] = arguments[_i];
+                return new visualSandbox.EmptyDeferredTelemetryEvent({
+                    info: {}
+                });
+            }, SandboxNoOpTelemetryProxyService.prototype.logEvent = function(eventFactory) {
+                for (var args = [], _i = 1; _i < arguments.length; _i++) args[_i - 1] = arguments[_i];
+                return null;
+            }, SandboxNoOpTelemetryProxyService.prototype.logTelemetryData = function(parent, eventName, info) {
+                return null;
+            }, SandboxNoOpTelemetryProxyService.prototype.logChildEvent = function(parent, eventFactory) {
+                for (var args = [], _i = 2; _i < arguments.length; _i++) args[_i - 2] = arguments[_i];
+            }, SandboxNoOpTelemetryProxyService.prototype.startActivity = function(scope, eventFactory) {
+                for (var args = [], _i = 2; _i < arguments.length; _i++) args[_i - 2] = arguments[_i];
+                return new visualSandbox.EmptyDeferredTelemetryEvent({
+                    info: {}
+                });
+            }, SandboxNoOpTelemetryProxyService.prototype.startChildActivity = function(parent, eventFactory) {
+                for (var args = [], _i = 2; _i < arguments.length; _i++) args[_i - 2] = arguments[_i];
+            }, SandboxNoOpTelemetryProxyService.prototype.startEvent = function(eventFactory) {
+                for (var args = [], _i = 1; _i < arguments.length; _i++) args[_i - 1] = arguments[_i];
+                return new visualSandbox.EmptyDeferredTelemetryEvent({
+                    info: {}
+                });
+            }, SandboxNoOpTelemetryProxyService.prototype.startMonitoredActivity = function(parentActivity, eventName, info) {
+                var event = {
+                    info: {}
+                };
+                return {
+                    activityEvent: event,
+                    activityDeferred: new visualSandbox.EmptyDeferredTelemetryEvent(event)
+                };
+            }, SandboxNoOpTelemetryProxyService.prototype.startChildEvent = function(parent, eventFactory) {
+                for (var args = [], _i = 2; _i < arguments.length; _i++) args[_i - 2] = arguments[_i];
+                return new visualSandbox.EmptyDeferredTelemetryEvent({
+                    info: {}
+                });
+            }, SandboxNoOpTelemetryProxyService.prototype.logTrace = function(trace) {}, Object.defineProperty(SandboxNoOpTelemetryProxyService.prototype, "sessionId", {
+                get: function() {},
+                enumerable: !1,
+                configurable: !0
+            }), Object.defineProperty(SandboxNoOpTelemetryProxyService.prototype, "appInstanceId", {
+                get: function() {},
+                enumerable: !1,
+                configurable: !0
+            }), Object.defineProperty(SandboxNoOpTelemetryProxyService.prototype, "root", {
+                get: function() {},
+                enumerable: !1,
+                configurable: !0
+            }), SandboxNoOpTelemetryProxyService.prototype.setHostInfo = function(key, value) {}, 
+            SandboxNoOpTelemetryProxyService.prototype.getHostData = function() {}, SandboxNoOpTelemetryProxyService.prototype.setExpAssignmentContext = function(expAssignmentContext) {}, 
+            SandboxNoOpTelemetryProxyService;
+        }();
+    }(powerbi.visualSandbox || (powerbi.visualSandbox = {}));
+}(powerbi = powerbi || {}), function(powerbi) {
+    !function(visualSandbox) {
+        var DataViewObjectSerializer = powerbi.data.services.DataViewObjectSerializer, SelectionManager = powerbi.extensibility.SelectionManager, Version = jsCommon.Version, VisualObjectInstanceSerializer = powerbi.visualHost.services.VisualObjectInstanceSerializer, BeautifiedFormat = {
+            "0.00 %;-0.00 %;0.00 %": "Percentage",
+            "0.0 %;-0.0 %;0.0 %": "Percentage1"
+        }, defaultLocalizedStrings = {
+            NullValue: "(Blank)",
+            BooleanTrue: "True",
+            BooleanFalse: "False",
+            NaNValue: "NaN",
+            InfinityValue: "+Infinity",
+            NegativeInfinityValue: "-Infinity",
+            Restatement_Comma: "{0}, {1}",
+            Restatement_CompoundAnd: "{0} and {1}",
+            DisplayUnitSystem_EAuto_Title: "Auto",
+            DisplayUnitSystem_E0_Title: "None",
+            DisplayUnitSystem_E3_LabelFormat: "{0}K",
+            DisplayUnitSystem_E3_Title: "Thousands",
+            DisplayUnitSystem_E6_LabelFormat: "{0}M",
+            DisplayUnitSystem_E6_Title: "Millions",
+            DisplayUnitSystem_E9_LabelFormat: "{0}bn",
+            DisplayUnitSystem_E9_Title: "Billions",
+            DisplayUnitSystem_E12_LabelFormat: "{0}T",
+            DisplayUnitSystem_E12_Title: "Trillions",
+            Percentage: "#,0.##%",
+            Percentage1: "#,0.#%",
+            TableTotalLabel: "Total",
+            Tooltip_HighlightedValueDisplayName: "Highlighted",
+            Decrease: "Decrease",
+            Increase: "Increase",
+            Waterfall_TotalLabel: "Total",
+            GeotaggingString_Continent: "continent",
+            GeotaggingString_Continents: "continents",
+            GeotaggingString_Country: "country",
+            GeotaggingString_Countries: "countries",
+            GeotaggingString_State: "state",
+            GeotaggingString_States: "states",
+            GeotaggingString_City: "city",
+            GeotaggingString_Cities: "cities",
+            GeotaggingString_Town: "town",
+            GeotaggingString_Towns: "towns",
+            GeotaggingString_Province: "province",
+            GeotaggingString_Provinces: "provinces",
+            GeotaggingString_County: "county",
+            GeotaggingString_Counties: "counties",
+            GeotaggingString_Village: "village",
+            GeotaggingString_Villages: "villages",
+            GeotaggingString_Post: "post",
+            GeotaggingString_Zip: "zip",
+            GeotaggingString_Code: "code",
+            GeotaggingString_Place: "place",
+            GeotaggingString_Places: "places",
+            GeotaggingString_Address: "address",
+            GeotaggingString_Addresses: "addresses",
+            GeotaggingString_Street: "street",
+            GeotaggingString_Streets: "streets",
+            GeotaggingString_Longitude: "longitude",
+            GeotaggingString_Longitude_Short: "lon",
+            GeotaggingString_Longitude_Short2: "long",
+            GeotaggingString_Latitude: "latitude",
+            GeotaggingString_Latitude_Short: "lat",
+            GeotaggingString_PostalCode: "postal code",
+            GeotaggingString_PostalCodes: "postal codes",
+            GeotaggingString_ZipCode: "zip code",
+            GeotaggingString_ZipCodes: "zip codes",
+            GeotaggingString_Territory: "territory",
+            GeotaggingString_Territories: "territories"
+        }, SandboxVisualHostServices = function() {
+            function SandboxVisualHostServices(messageProxy, sandboxPromiseHandler) {
+                this.messageProxy = messageProxy, this.sandboxPromiseHandler = sandboxPromiseHandler, 
+                this.loadMoreDataEnabled = !0, this.visualHostTooltipService = visualSandbox.createSandboxVisualHostTooltipService(messageProxy), 
+                this.queryDictionary = SandboxVisualHostServices.parseUrlParameters(), this.authService = visualSandbox.createSandboxVisualHostAuthenticationService(messageProxy, this.promiseFactory(), sandboxPromiseHandler), 
+                this.storageService = visualSandbox.createSandboxVisualHostLocalStorageService(messageProxy, this.promiseFactory(), sandboxPromiseHandler), 
+                this.contentDownloadService = visualSandbox.createSandboxVisualHostDownloadService(messageProxy, this.promiseFactory(), sandboxPromiseHandler), 
+                this.licensesManagerService = visualSandbox.createSandboxVisualHostLicenseManagerService(messageProxy, this.promiseFactory(), sandboxPromiseHandler), 
+                this.dialogPromiseFactory = this.promiseFactory();
+            }
+            return SandboxVisualHostServices.prototype.initInstanceId = function(instanceId) {
+                this._instanceId = instanceId, this.telemetryService = visualSandbox.createSandboxVisualHostTelemetryService(this.messageProxy, instanceId), 
+                this.eventsService = visualSandbox.createSandboxVisualHostEventService(this.messageProxy, instanceId);
+            }, SandboxVisualHostServices.initialize = function() {
+                powerbi.visuals.ToolTipComponent && (powerbi.visuals.ToolTipComponent.localizationOptions = SandboxVisualHostServices.createTooltipLocaleOptions());
+            }, SandboxVisualHostServices.createLocaleOptions = function() {
+                return {
+                    null: defaultLocalizedStrings.NullValue,
+                    true: defaultLocalizedStrings.BooleanTrue,
+                    false: defaultLocalizedStrings.BooleanFalse,
+                    NaN: defaultLocalizedStrings.NaNValue,
+                    infinity: defaultLocalizedStrings.InfinityValue,
+                    negativeInfinity: defaultLocalizedStrings.NegativeInfinityValue,
+                    beautify: function(format) {
+                        return SandboxVisualHostServices.beautify(format);
+                    },
+                    describe: function(exponent) {
+                        return SandboxVisualHostServices.describeUnit(exponent);
+                    },
+                    restatementComma: defaultLocalizedStrings.Restatement_Comma,
+                    restatementCompoundAnd: defaultLocalizedStrings.Restatement_CompoundAnd,
+                    restatementCompoundOr: defaultLocalizedStrings.Restatement_CompoundOr
+                };
+            }, SandboxVisualHostServices.createTooltipLocaleOptions = function() {
+                return {
+                    highlightedValueDisplayName: defaultLocalizedStrings.Tooltip_HighlightedValueDisplayName
+                };
+            }, SandboxVisualHostServices.prototype.getLocalizedString = function(stringId) {
+                return defaultLocalizedStrings[stringId];
+            }, SandboxVisualHostServices.prototype.onSelecting = function(selectingArgs) {
+                selectingArgs.action = 0;
+            }, SandboxVisualHostServices.prototype.onSelect = function(proxyArgs) {
+                var deprecatedArgs;
+                proxyArgs = powerbi.extensibility.legacy.isOldSelectEventArgs(proxyArgs) ? {
+                    data: DataViewObjectSerializer.serializeSelectors((deprecatedArgs = proxyArgs).data),
+                    data2: DataViewObjectSerializer.serializeSelectorsByColumn(deprecatedArgs.data2),
+                    selectors: DataViewObjectSerializer.serializeSelectors(proxyArgs.selectors)
+                } : {
+                    visualObjects: DataViewObjectSerializer.serializeVisualObjects(proxyArgs.visualObjects)
+                }, this.messageProxy.postMessage({
+                    eventName: "onSelect",
+                    arguments: [ proxyArgs ]
+                });
+            }, SandboxVisualHostServices.prototype.customVisualOnContextMenu = function(args) {
+                this.messageProxy.postMessage({
+                    eventName: "onCustomVisualContextMenu",
+                    arguments: [ args ]
+                });
+            }, SandboxVisualHostServices.prototype.customVisualOnExpandCollapse = function(args) {
+                this.messageProxy.postMessage({
+                    eventName: "onCustomVisualExpandCollapse",
+                    arguments: [ args ]
+                });
+            }, SandboxVisualHostServices.prototype.switchFocusModeState = function(on) {
+                this.messageProxy.postMessage({
+                    eventName: "onSwitchFocusModeState",
+                    arguments: [ on ]
+                });
+            }, SandboxVisualHostServices.prototype.displayWarningIcon = function(hoverText, detailedText) {
+                null != hoverText && null != detailedText && this.messageProxy.postMessage({
+                    eventName: "onDisplayWarningIcon",
+                    arguments: [ hoverText, detailedText ]
+                });
+            }, SandboxVisualHostServices.prototype.persistProperties = function(wireChanges) {
+                var instancesToPersist = wireChanges, wireChanges = this.apiVersion && (Version.gt(this.apiVersion, "2.0.0") || Version.eq(this.apiVersion, "2.0.0")) ? wireChanges : instancesToPersist.merge || instancesToPersist.remove || instancesToPersist.replace ? {
+                    merge: instancesToPersist.merge ? VisualObjectInstanceSerializer.serialize(instancesToPersist.merge) : null,
+                    replace: instancesToPersist.replace ? VisualObjectInstanceSerializer.serialize(instancesToPersist.replace) : null,
+                    remove: instancesToPersist.remove ? VisualObjectInstanceSerializer.serialize(instancesToPersist.remove) : null
+                } : VisualObjectInstanceSerializer.serialize(wireChanges);
+                this.messageProxy.postMessage({
+                    eventName: "persistProperties",
+                    arguments: [ wireChanges ]
+                });
+            }, SandboxVisualHostServices.prototype.sendSelectionIdsToHost = function(selectArgs) {
+                this.messageProxy.postMessage({
+                    eventName: "transformCvSelectionIdsAndSelect",
+                    arguments: [ selectArgs ]
+                });
+            }, SandboxVisualHostServices.prototype.loadMoreData = function() {
+                this.fetchMoreData(!0);
+            }, SandboxVisualHostServices.prototype.loadWindow = function(windowExpansionState) {}, 
+            SandboxVisualHostServices.prototype.fetchMoreData = function(aggregateSegments) {
+                return !!this.loadMoreDataEnabled && (this.messageProxy.postMessage({
+                    eventName: "loadMoreData",
+                    arguments: [ aggregateSegments = !1 !== aggregateSegments ? !0 : aggregateSegments ]
+                }), !0);
+            }, SandboxVisualHostServices.prototype.launchUrl = function(url) {
+                this.messageProxy.postMessage({
+                    eventName: "launchUrl",
+                    arguments: [ url ]
+                });
+            }, SandboxVisualHostServices.prototype.openModalDialog = function(dialogId, options, message) {
+                var promise = this.sandboxPromiseHandler.CreatePromise(this.dialogPromiseFactory.defer()), message = {
+                    eventName: "openModalDialog",
+                    arguments: [ dialogId, options, message, promise.id ]
+                };
+                return this.messageProxy.postMessage(message), promise.deferred.promise;
+            }, SandboxVisualHostServices.prototype.tooltips = function() {
+                return this.visualHostTooltipService;
+            }, SandboxVisualHostServices.prototype.telemetry = function() {
+                return this.telemetryService;
+            }, SandboxVisualHostServices.prototype.authenticationService = function() {
+                return this.authService;
+            }, SandboxVisualHostServices.prototype.localStorageService = function() {
+                return this.storageService;
+            }, SandboxVisualHostServices.prototype.eventService = function() {
+                return this.eventsService;
+            }, SandboxVisualHostServices.prototype.licenseManagerService = function() {
+                return this.licensesManagerService;
+            }, SandboxVisualHostServices.prototype.visualTimeSynchronization = function() {
+                return this.visualTimeSynchronizationService;
+            }, SandboxVisualHostServices.prototype.networkAvailability = function() {
+                return this.networkAvailabilityService;
+            }, SandboxVisualHostServices.prototype.getSectionsMetadata$ = function() {}, SandboxVisualHostServices.prototype.getBookmarksMetadata$ = function() {}, 
+            SandboxVisualHostServices.prototype.downloadService = function() {
+                return this.contentDownloadService;
+            }, SandboxVisualHostServices.prototype.artifactService = function() {}, SandboxVisualHostServices.prototype.locale = function() {
+                var loc = this.queryDictionary && this.queryDictionary.locale;
+                return loc || navigator.language;
+            }, SandboxVisualHostServices.prototype.loader = function() {
+                var _this = this;
+                return {
+                    require: function() {
+                        return _this.promiseFactory().reject();
+                    }
+                };
+            }, SandboxVisualHostServices.prototype.applyJsonFilter = function(filters, objectName, args, action) {
+                args = [ filters, objectName, args ];
+                return action && args.push(action), this.messageProxy.postMessage({
+                    eventName: "applyJsonFilter",
+                    arguments: args
+                }), !0;
+            }, SandboxVisualHostServices.prototype.applyIdentityFilter = function(scopeIds, objectName, args, action) {
+                args = [ scopeIds, objectName, args ];
+                return action && args.push(action), this.messageProxy.postMessage({
+                    eventName: "applyIdentityFilter",
+                    arguments: args
+                }), !0;
+            }, SandboxVisualHostServices.prototype.getJSONFilter = function(_filter, dataViewScopeIdentityCVCache) {
+                return this.promiseFactory().reject();
+            }, SandboxVisualHostServices.parseUrlParameters = function(search) {
+                var queryStringDictionary = {}, search = search = void 0 === search ? window.location.search : search;
+                if (search && "?" === search.substr(0, 1)) for (var _i = 0, pairs_1 = search.substr(1).split("&"); _i < pairs_1.length; _i++) {
+                    var keyValuePair = pairs_1[_i], keyValuePair = keyValuePair && keyValuePair.split("=");
+                    keyValuePair && 2 === keyValuePair.length && (queryStringDictionary[decodeURIComponent(keyValuePair[0])] = decodeURIComponent(keyValuePair[1]));
+                }
+                return queryStringDictionary;
+            }, SandboxVisualHostServices.prototype.destroy = function() {
+                this.messageProxy.destroy(), this.messageProxy = null;
+            }, SandboxVisualHostServices.prototype.refreshHostData = function() {
+                this.messageProxy.postMessage({
+                    eventName: "refreshHostData",
+                    arguments: null
+                });
+            }, SandboxVisualHostServices.prototype.createSelectionIdBuilder = function() {
+                return new powerbi.visuals.CustomVisualSelectionId();
+            }, SandboxVisualHostServices.prototype.createTooltipService = function() {
+                return powerbi.extensibility.createTooltipService({
+                    hostServices: this
+                });
+            }, SandboxVisualHostServices.prototype.createSelectionManager = function(apiVersion) {
+                return new SelectionManager({
+                    hostServices: this,
+                    apiVersion: apiVersion
+                });
+            }, SandboxVisualHostServices.prototype.alertScreenReader = function(message) {}, 
+            SandboxVisualHostServices.prototype.alertWithDebounce = function(id, message) {}, 
+            SandboxVisualHostServices.prototype.requestFocus = function() {}, SandboxVisualHostServices.prototype.setShouldDeferData = function() {}, 
+            SandboxVisualHostServices.prototype.onDragStart = function() {}, SandboxVisualHostServices.prototype.onContextMenu = function() {}, 
+            SandboxVisualHostServices.prototype.onSwitchFocusModeState = function() {}, SandboxVisualHostServices.prototype.onDisplayWarningIcon = function() {}, 
+            SandboxVisualHostServices.prototype.onClearCustomizedWarningIcon = function() {}, 
+            SandboxVisualHostServices.prototype.getVisualLinkProperties = function() {}, SandboxVisualHostServices.prototype.canSelect = function() {
+                return !1;
+            }, SandboxVisualHostServices.prototype.canExpandCollapse = function(roles) {
+                return !1;
+            }, SandboxVisualHostServices.prototype.setNodeExpansionState = function(_args) {}, 
+            SandboxVisualHostServices.prototype.setLevelExpansionState = function(_args) {}, 
+            SandboxVisualHostServices.prototype.onCustomSort = function(args) {}, SandboxVisualHostServices.prototype.getViewMode = function() {
+                return 0;
+            }, SandboxVisualHostServices.prototype.getEditMode = function() {
+                return 0;
+            }, SandboxVisualHostServices.prototype.setWarnings = function(warnings) {}, SandboxVisualHostServices.prototype.setToolbar = function($toolbar) {}, 
+            SandboxVisualHostServices.prototype.shouldRetainSelection = function() {
+                return !1;
+            }, SandboxVisualHostServices.prototype.geocoder = function() {
+                return powerbi.visuals.services.createGeocoder();
+            }, SandboxVisualHostServices.prototype.geolocation = function() {}, SandboxVisualHostServices.prototype.promiseFactory = function() {
+                return powerbi.createJQueryPromiseFactory();
+            }, SandboxVisualHostServices.prototype.ignoreDefaultFilter = function() {
+                return !1;
+            }, SandboxVisualHostServices.prototype.getIdentityDisplayNames = function(identities) {}, 
+            SandboxVisualHostServices.prototype.setIdentityDisplayNames = function(displayNamesIdentityPairs) {}, 
+            SandboxVisualHostServices.prototype.setFilterExpressionMetadata = function() {}, 
+            SandboxVisualHostServices.prototype.getFilterExpressionMetadata = function() {}, 
+            SandboxVisualHostServices.prototype.getUIComponentFactory = function() {}, SandboxVisualHostServices.prototype.onHyperlinkClick = function(url, mouseEvent) {}, 
+            SandboxVisualHostServices.prototype.isVisualEnabled = function() {
+                return this.promiseFactory().resolve(!0);
+            }, SandboxVisualHostServices.prototype.dataMultiSelectMode = function() {
+                return 0;
+            }, SandboxVisualHostServices.prototype.dropdown = function() {}, SandboxVisualHostServices.prototype.setAriaMetadata = function(ariaMetadata) {}, 
+            SandboxVisualHostServices.prototype.onNotifyLicense = function(notificationType) {}, 
+            SandboxVisualHostServices.prototype.onClearLicenseNotification = function() {}, 
+            SandboxVisualHostServices.prototype.onNotifyFeatureBlocked = function(tooltip) {}, 
+            SandboxVisualHostServices.prototype.getSubSelectionService = function() {}, Object.defineProperty(SandboxVisualHostServices.prototype, "instanceId", {
+                get: function() {
+                    return this._instanceId;
+                },
+                enumerable: !1,
+                configurable: !0
+            }), SandboxVisualHostServices.beautify = function(format) {
+                var key = BeautifiedFormat[format];
+                return key && defaultLocalizedStrings[key] || format;
+            }, SandboxVisualHostServices.describeUnit = function(exponent) {
+                var format = -1 === exponent ? "Auto" : exponent.toString(), title = defaultLocalizedStrings["DisplayUnitSystem_E" + format + "_Title"], format = exponent <= 0 ? "{0}" : defaultLocalizedStrings["DisplayUnitSystem_E" + format + "_LabelFormat"];
+                if (title || format) return {
+                    title: title,
+                    format: format
+                };
+            }, SandboxVisualHostServices.prototype.enableLoadMoreData = function(enable) {
+                this.loadMoreDataEnabled = enable;
+            }, SandboxVisualHostServices;
+        }();
+        visualSandbox.SandboxVisualHostServices = SandboxVisualHostServices, visualSandbox.createVisualHostServices = function(messageProxy, sandboxPromiseHandler) {
+            return new SandboxVisualHostServices(messageProxy, sandboxPromiseHandler);
+        };
+    }(powerbi.visualSandbox || (powerbi.visualSandbox = {}));
+}(powerbi = powerbi || {}), function(powerbi) {
+    !function(visualSandbox) {
+        var SelectionManager = powerbi.extensibility.SelectionManager, NonSandboxVisualHostServices = function() {
+            function NonSandboxVisualHostServices(host, element, visualHostTooltip) {
+                this.powerbiHost = host, this.visualHostTooltipService = visualHostTooltip, this.tooltipService = new NonSandboxTooltipService(element, this.visualHostTooltipService);
+            }
+            return NonSandboxVisualHostServices.prototype.onSelecting = function(selectingArgs) {
+                selectingArgs.action = 0;
+            }, NonSandboxVisualHostServices.prototype.onSelect = function(selectArgs) {
+                this.powerbiHost && this.powerbiHost.onSelect(selectArgs);
+            }, NonSandboxVisualHostServices.prototype.persistProperties = function(changes) {
+                this.powerbiHost && this.powerbiHost.persistProperties(changes);
+            }, NonSandboxVisualHostServices.prototype.tooltips = function() {
+                return this.visualHostTooltipService;
+            }, NonSandboxVisualHostServices.prototype.applyJsonFilter = function(filter, objectName, propertyName, action) {
+                this.powerbiHost.applyJsonFilter(filter, objectName, propertyName, action);
+            }, NonSandboxVisualHostServices.prototype.applyIdentityFilter = function(scopeIds, objectName, propertyName, action) {
+                this.powerbiHost.applyIdentityFilter(scopeIds, objectName, propertyName, action);
+            }, NonSandboxVisualHostServices.prototype.getJSONFilter = function(_filter, dataViewScopeIdentityCVCache) {
+                return this.promiseFactory().reject();
+            }, NonSandboxVisualHostServices.prototype.createSelectionIdBuilder = function() {
+                return new powerbi.visuals.SelectionIdBuilder();
+            }, NonSandboxVisualHostServices.prototype.createTooltipService = function() {
+                return this.tooltipService;
+            }, NonSandboxVisualHostServices.prototype.createSelectionManager = function(apiVersion) {
+                return new SelectionManager({
+                    hostServices: this,
+                    apiVersion: apiVersion
+                }, !0);
+            }, NonSandboxVisualHostServices.prototype.getLocalizedString = function(stringId) {
+                return null;
+            }, NonSandboxVisualHostServices.prototype.locale = function() {
+                return navigator.language;
+            }, NonSandboxVisualHostServices.prototype.loader = function() {
+                var _this = this;
+                return {
+                    require: function() {
+                        return _this.promiseFactory().reject();
+                    }
+                };
+            }, NonSandboxVisualHostServices.prototype.onSwitchFocusModeState = function(on) {
+                this.powerbiHost && this.powerbiHost.onSwitchFocusModeState(on);
+            }, NonSandboxVisualHostServices.prototype.onDisplayWarningIcon = function(hoverText, detailedText) {
+                var code, titleLimit, warning;
+                this.powerbiHost && (code = powerbi.visualHost.warningCodeForCV, titleLimit = powerbi.visualHost.warningTitleLimit, 
+                warning = powerbi.visualHost.warningDetailsLimit, warning = new powerbi.visuals.CustomizedWarning(code, hoverText.substr(0, titleLimit), detailedText.substr(0, warning)), 
+                this.powerbiHost.setWarnings([ warning ]));
+            }, NonSandboxVisualHostServices.prototype.loadMoreData = function() {}, NonSandboxVisualHostServices.prototype.loadWindow = function(windowExpansion) {}, 
+            NonSandboxVisualHostServices.prototype.setShouldDeferData = function() {}, NonSandboxVisualHostServices.prototype.fetchMoreData = function(aggregateSegments) {
+                return !0;
+            }, NonSandboxVisualHostServices.prototype.launchUrl = function(url) {}, NonSandboxVisualHostServices.prototype.destroy = function() {}, 
+            NonSandboxVisualHostServices.prototype.refreshHostData = function() {}, NonSandboxVisualHostServices.prototype.onContextMenu = function() {}, 
+            NonSandboxVisualHostServices.prototype.authenticationService = function() {
+                return null;
+            }, NonSandboxVisualHostServices.prototype.telemetry = function() {
+                return null;
+            }, NonSandboxVisualHostServices.prototype.localStorageService = function() {
+                return null;
+            }, NonSandboxVisualHostServices.prototype.eventService = function() {
+                return null;
+            }, NonSandboxVisualHostServices.prototype.licenseManagerService = function() {
+                return null;
+            }, NonSandboxVisualHostServices.prototype.visualTimeSynchronization = function() {
+                return null;
+            }, NonSandboxVisualHostServices.prototype.alertScreenReader = function(message) {}, 
+            NonSandboxVisualHostServices.prototype.alertWithDebounce = function(id, message) {}, 
+            NonSandboxVisualHostServices.prototype.requestFocus = function() {}, NonSandboxVisualHostServices.prototype.onDragStart = function() {}, 
+            NonSandboxVisualHostServices.prototype.getVisualLinkProperties = function() {}, 
+            NonSandboxVisualHostServices.prototype.canSelect = function() {
+                return !1;
+            }, NonSandboxVisualHostServices.prototype.canExpandCollapse = function() {
+                return !1;
+            }, NonSandboxVisualHostServices.prototype.setNodeExpansionState = function(_args) {}, 
+            NonSandboxVisualHostServices.prototype.setLevelExpansionState = function(_args) {}, 
+            NonSandboxVisualHostServices.prototype.onCustomSort = function(args) {}, NonSandboxVisualHostServices.prototype.getViewMode = function() {
+                return 0;
+            }, NonSandboxVisualHostServices.prototype.getEditMode = function() {
+                return 0;
+            }, NonSandboxVisualHostServices.prototype.setWarnings = function(warnings) {}, NonSandboxVisualHostServices.prototype.setToolbar = function($toolbar) {}, 
+            NonSandboxVisualHostServices.prototype.shouldRetainSelection = function() {
+                return !1;
+            }, NonSandboxVisualHostServices.prototype.geocoder = function() {
+                return powerbi.visuals.services.createGeocoder();
+            }, NonSandboxVisualHostServices.prototype.geolocation = function() {}, NonSandboxVisualHostServices.prototype.promiseFactory = function() {
+                return powerbi.createJQueryPromiseFactory();
+            }, NonSandboxVisualHostServices.prototype.ignoreDefaultFilter = function() {
+                return !1;
+            }, NonSandboxVisualHostServices.prototype.getIdentityDisplayNames = function(identities) {}, 
+            NonSandboxVisualHostServices.prototype.setIdentityDisplayNames = function(displayNamesIdentityPairs) {}, 
+            NonSandboxVisualHostServices.prototype.setFilterExpressionMetadata = function() {}, 
+            NonSandboxVisualHostServices.prototype.getFilterExpressionMetadata = function() {}, 
+            NonSandboxVisualHostServices.prototype.getUIComponentFactory = function() {}, NonSandboxVisualHostServices.prototype.onHyperlinkClick = function(url, mouseEvent) {}, 
+            NonSandboxVisualHostServices.prototype.isVisualEnabled = function() {
+                return this.promiseFactory().resolve(!0);
+            }, NonSandboxVisualHostServices.prototype.dataMultiSelectMode = function() {
+                return 0;
+            }, NonSandboxVisualHostServices.prototype.dropdown = function() {}, NonSandboxVisualHostServices.prototype.networkAvailability = function() {}, 
+            NonSandboxVisualHostServices.prototype.downloadService = function() {}, NonSandboxVisualHostServices.prototype.setAriaMetadata = function(ariaMetadata) {}, 
+            NonSandboxVisualHostServices.prototype.artifactService = function() {}, NonSandboxVisualHostServices.prototype.getSectionsMetadata$ = function() {}, 
+            NonSandboxVisualHostServices.prototype.getBookmarksMetadata$ = function() {}, NonSandboxVisualHostServices.prototype.onNotifyLicense = function(notificationType) {}, 
+            NonSandboxVisualHostServices.prototype.onClearLicenseNotification = function() {}, 
+            NonSandboxVisualHostServices.prototype.onNotifyFeatureBlocked = function(tooltip) {}, 
+            NonSandboxVisualHostServices.prototype.getSubSelectionService = function() {}, NonSandboxVisualHostServices.prototype.enableLoadMoreData = function(enable) {}, 
+            NonSandboxVisualHostServices;
+        }();
+        visualSandbox.NonSandboxVisualHostServices = NonSandboxVisualHostServices;
+        var NonSandboxTooltipService = function() {
+            function NonSandboxTooltipService(element, visualHostTooltip) {
+                this.tooltipService = visualHostTooltip, this.element = element;
+            }
+            return NonSandboxTooltipService.prototype.enabled = function() {
+                return this.tooltipService && this.tooltipService.enabled();
+            }, NonSandboxTooltipService.prototype.show = function(args) {
+                this.enabled() && (args = {
+                    coordinates: this.fixCoordinates(args.coordinates),
+                    dataItems: args.dataItems,
+                    isTouchEvent: args.isTouchEvent,
+                    identities: SelectionManager.getSelectorsByColumn(args.identities)
+                }, this.tooltipService.show(args));
+            }, NonSandboxTooltipService.prototype.move = function(args) {
+                this.enabled() && (args = {
+                    coordinates: this.fixCoordinates(args.coordinates),
+                    dataItems: args.dataItems,
+                    isTouchEvent: args.isTouchEvent,
+                    identities: SelectionManager.getSelectorsByColumn(args.identities)
+                }, this.tooltipService.move(args));
+            }, NonSandboxTooltipService.prototype.hide = function(options) {
+                this.enabled() && this.tooltipService.hide(options);
+            }, NonSandboxTooltipService.prototype.fixCoordinates = function(coordinates) {
+                var offset = this.element.offset();
+                return coordinates[0] = coordinates[0] + offset.left, coordinates[1] = coordinates[1] + offset.top, 
+                coordinates;
+            }, NonSandboxTooltipService;
+        }();
+        visualSandbox.createNonSandboxVisualHostServices = function(host, element, visualHostTooltip) {
+            return new NonSandboxVisualHostServices(host, element, visualHostTooltip);
+        };
+    }(powerbi.visualSandbox || (powerbi.visualSandbox = {}));
+}(powerbi = powerbi || {}), function(powerbi) {
+    !function(visualSandbox) {
+        var DataViewScopeIdentitySerializer = powerbi.data.services.DataViewScopeIdentitySerializer, SandboxDataViewSerializer = function() {
+            function SandboxDataViewSerializer() {
+                this.serializeDataViewFromScrathTimes = 0, this.identitiesArray = [], this.identityNodeIndexArray = {}, 
+                this.stackNodeIndex = [], this.rowsLevel = [], this.lastNodeIndex = [];
+            }
+            return SandboxDataViewSerializer.prototype.serializeDataViewForCv = function(stringifiedDataView, valueGroups, loadMoreData, parseDateTime, valueSource) {
+                var _this = this;
+                if (this.isSupportExpandCollapse = !!stringifiedDataView && !!stringifiedDataView.matrix && !!valueGroups.expandCollapse, 
+                loadMoreData ? this.isSupportExpandCollapse && (valueSource && _.isEmpty(valueSource), 
+                this.lastNodeIndex = valueSource) : (this.identitiesArray = [], this.identityNodeIndexArray = {}, 
+                this.stackNodeIndex = [], this.rowsLevel = [], this.serializeDataViewFromScrathTimes = (this.serializeDataViewFromScrathTimes + 1) % 11617, 
+                this.lastNodeIndex = []), stringifiedDataView) {
+                    stringifiedDataView = this.filterDataViewsType(stringifiedDataView, valueGroups), 
+                    this.isSupportExpandCollapse && stringifiedDataView.matrix.rows && stringifiedDataView.matrix.rows.levels && stringifiedDataView.matrix.rows.levels.forEach(function(level, i) {
+                        level.sources && level.sources[0] && level.sources[0].queryName && (_this.rowsLevel.length > i ? _this.rowsLevel[i] = level.sources[0].queryName : _this.rowsLevel.push(level.sources[0].queryName));
+                    });
+                    valueSource = this.getValueSource(stringifiedDataView), valueGroups = this.getValueGroups(stringifiedDataView), 
+                    stringifiedDataView = JSON.stringify(stringifiedDataView, function(key, value) {
+                        return _this.replacer(key, value, parseDateTime);
+                    });
+                    return _.isEmpty(this.stackNodeIndex), {
+                        valueSource: valueSource,
+                        valueGroups: valueGroups,
+                        stringifiedDataView: stringifiedDataView
+                    };
+                }
+            }, SandboxDataViewSerializer.prototype.serializeDataViewMetadata = function(dataView) {
+                var _this = this;
+                return dataView.metadata ? JSON.stringify(dataView.metadata, function(key, value) {
+                    return _this.replacer(key, value);
+                }) : null;
+            }, SandboxDataViewSerializer.prototype.deserializeDataView = function(serializedDataView, parsedDv) {
+                var _this = this, parsedDv = parsedDv ? JSON.parse(serializedDataView.stringifiedDataView, function(key, value) {
+                    return _this.deserializeDataViewHelper(key, value);
+                }) : JSON.parse(serializedDataView.stringifiedDataView);
+                return this.reconstructValuesGroups(parsedDv, serializedDataView), this.reconstructValuesSource(parsedDv, serializedDataView), 
+                parsedDv;
+            }, SandboxDataViewSerializer.prototype.deserializeDataViewHelper = function(key, value) {
+                if ("children" === key && value && value instanceof Array) for (var i = 0; i < value.length; i++) if (value[i] && (value[i].isDate && (value[i].value = new Date(value[i].value)), 
+                value[i].values)) for (var k in value[i].values) value[i].values[k].isDate && (value[i].values[k].value = new Date(value[i].values[k].value));
+                return value;
+            }, SandboxDataViewSerializer.prototype.convertOpaqueIdentitiesToScopeIds = function(scopeIds) {
+                var dataViewScopeIdentityArray = [];
+                if (scopeIds && 0 < scopeIds.length) for (var _i = 0, scopeIds_1 = scopeIds; _i < scopeIds_1.length; _i++) {
+                    var selectionId = scopeIds_1[_i], deserializedSelection = this.replaceOpaqueIndexWithScopeIds(selectionId);
+                    deserializedSelection && (deserializedSelection.opaqueIdentity = {
+                        identityIndex: selectionId
+                    }, dataViewScopeIdentityArray.push(deserializedSelection));
+                }
+                return dataViewScopeIdentityArray;
+            }, SandboxDataViewSerializer.prototype.convertCVSelectionIdToPowerbiSelctionId = function(deserializedSelection) {
+                var _this = this, deserializedSelection = JSON.parse(JSON.stringify(deserializedSelection), function(key, value) {
+                    return _this.replaceOpaqueIdentitiesWithDataViewScopeIdentities(key, value);
+                });
+                return powerbi.visuals.SelectionId.createWithSelectorForColumnAndMeasures(deserializedSelection.dataMap, deserializedSelection.measures);
+            }, SandboxDataViewSerializer.prototype.getIndexOfIdentity = function(identity) {
+                return _.findIndex(this.identitiesArray, function(i) {
+                    return powerbi.DataViewScopeIdentity.equals(i, identity);
+                });
+            }, SandboxDataViewSerializer.prototype.getNodeIndexOfSelectionId = function(CVSelectionId) {
+                var nodeIndexArray = [];
+                if (CVSelectionId && CVSelectionId.dataMap) for (var identityIndex in CVSelectionId.dataMap) {
+                    identityIndex = _.first(CVSelectionId.dataMap[identityIndex]).identityIndex;
+                    null != this.identityNodeIndexArray[identityIndex] && nodeIndexArray.push(this.identityNodeIndexArray[identityIndex]);
+                }
+                return nodeIndexArray;
+            }, SandboxDataViewSerializer.prototype.sortSelectionIdDataMapAccordingToRows = function(CVSelectionId) {
+                var _this = this;
+                if (!CVSelectionId || !CVSelectionId.dataMap) return !1;
+                var sortedDataMapKeys = Object.keys(CVSelectionId.dataMap).sort(function(key1, key2) {
+                    return _this.rowsLevel.indexOf(key1) - _this.rowsLevel.indexOf(key2);
+                }), doesEachElementExistOnce = !_.isEmpty(sortedDataMapKeys) && !_.isEmpty(this.rowsLevel) && sortedDataMapKeys.length <= this.rowsLevel.length && sortedDataMapKeys.every(function(val, index) {
+                    return val === _this.rowsLevel[index];
+                });
+                return doesEachElementExistOnce && (CVSelectionId.dataMap = sortedDataMapKeys.reduce(function(dataMap, key) {
+                    return dataMap[key] = CVSelectionId.dataMap[key], dataMap;
+                }, {})), doesEachElementExistOnce;
+            }, SandboxDataViewSerializer.prototype.deserializeVisualObjectInstance = function(wireVisualObjectInstances) {
+                var _this = this;
+                return JSON.parse(JSON.stringify(wireVisualObjectInstances, function(key, value) {
+                    return _this.replaceOpaqueIdentities(key, value);
+                }));
+            }, SandboxDataViewSerializer.prototype.flushIdentitiesArray = function() {
+                this.identitiesArray && 0 !== this.identitiesArray.length && this.identitiesArray.forEach(function(id) {
+                    id.opaqueIdentity = void 0, id.serializeDataViewFromScrathTimes = void 0;
+                });
+            }, SandboxDataViewSerializer.prototype.getValueGroups = function(valueGroups) {
+                var _this = this;
+                if (valueGroups && valueGroups.categorical && valueGroups.categorical.values && valueGroups.categorical.values.grouped) {
+                    valueGroups = valueGroups.categorical.values.grouped();
+                    return JSON.stringify(valueGroups, function(key, value) {
+                        return _this.replacer(key, value);
+                    });
+                }
+                return null;
+            }, SandboxDataViewSerializer.prototype.getValueSource = function(dataView) {
+                return dataView && dataView.categorical && dataView.categorical.values && dataView.categorical.values.source ? dataView.categorical.values.source : null;
+            }, SandboxDataViewSerializer.prototype.replacer = function(_key, value, parseDateTime) {
+                if (value) {
+                    if (!isNaN(parseInt(_key, 10)) && value.identity && this.isDataViewScopeIdentity(value.identity) && this.isSupportExpandCollapse && (this.stackNodeIndex.push(parseInt(_key, 10) + this.getNodeIndexOffset(value)), 
+                    value.needOffset && delete value.needOffset), this.isDataViewScopeIdentity(value)) return value.serializeDataViewFromScrathTimes === this.serializeDataViewFromScrathTimes && value.opaqueIdentity && null != value.opaqueIdentity.identityIndex ? (this.stackNodeIndex.length && (null != this.identityNodeIndexArray[value.opaqueIdentity.identityIndex] ? this.stackNodeIndex.pop() : this.identityNodeIndexArray[value.opaqueIdentity.identityIndex] = this.stackNodeIndex.pop()), 
+                    {
+                        identityIndex: value.opaqueIdentity.identityIndex
+                    }) : (_.isEmpty(this.lastNodeIndex) || _.isEmpty(this.lastNodeIndex) || value.opaqueIdentity, 
+                    value.opaqueIdentity = {
+                        identityIndex: this.identitiesArray.length
+                    }, value.serializeDataViewFromScrathTimes = this.serializeDataViewFromScrathTimes, 
+                    this.identitiesArray.push(value), this.stackNodeIndex.length && (this.identityNodeIndexArray[value.opaqueIdentity.identityIndex] = this.stackNodeIndex.pop()), 
+                    value.opaqueIdentity);
+                    if (value instanceof Array) {
+                        var array = [];
+                        if (this.isSupportExpandCollapse && "children" === _key && !_.isEmpty(value) && _.first(value).isMerge) for (var _i = 0, value_1 = value; _i < value_1.length; _i++) value_1[_i].needOffset = !0;
+                        if (parseDateTime && "children" === _key) for (var i = 0; i < value.length; i++) if (value[i] && (value[i].value && value[i].value instanceof Date && (value[i].isDate = !0), 
+                        value[i].values)) for (var k in value[i].values) value[i].values[k].value && value[i].values[k].value instanceof Date && (value[i].values[k].isDate = !0);
+                        return array.push.apply(array, value || []), array;
+                    }
+                    if ("object" == typeof value && !this.dontNeedToClone(value)) {
+                        var objectKey, newObject = {};
+                        for (objectKey in value) newObject[objectKey] = value[objectKey];
+                        return newObject;
+                    }
+                }
+                return value;
+            }, SandboxDataViewSerializer.prototype.replaceOpaqueIdentities = function(_key, value) {
+                return value && void 0 !== value.identityIndex ? DataViewScopeIdentitySerializer.serializeScopeIdentity(this.identitiesArray[value.identityIndex]) : value;
+            }, SandboxDataViewSerializer.prototype.getNodeIndexOffset = function(node) {
+                if (this.isSupportExpandCollapse && !_.isEmpty(this.lastNodeIndex) && node.needOffset) return node.level, 
+                this.lastNodeIndex.length, this.lastNodeIndex[node.level];
+                return 0;
+            }, SandboxDataViewSerializer.prototype.replaceOpaqueIdentitiesWithDataViewScopeIdentities = function(_key, value) {
+                return value && void 0 !== value.identityIndex ? this.identitiesArray[value.identityIndex] : value;
+            }, SandboxDataViewSerializer.prototype.filterDataViewsType = function(dataView, capabilities) {
+                return capabilities.dataViewMappings && (capabilities.dataViewMappings[0].categorical || (dataView.categorical = null), 
+                capabilities.dataViewMappings[0].matrix || (dataView.matrix = null), capabilities.dataViewMappings[0].table || (dataView.table = null), 
+                capabilities.dataViewMappings[0].tree || (dataView.tree = null), capabilities.dataViewMappings[0].single || (dataView.single = null)), 
+                dataView;
+            }, SandboxDataViewSerializer.prototype.dontNeedToClone = function(value) {
+                return value._proto_ === Object.prototype || value instanceof Date;
+            }, SandboxDataViewSerializer.prototype.isDataViewScopeIdentity = function(obj) {
+                return !!(obj && obj.expr && obj.key && obj.kind);
+            }, SandboxDataViewSerializer.prototype.reconstructValuesSource = function(dataView, serializedDV) {
+                serializedDV && serializedDV.valueSource && (dataView.categorical.values.source = serializedDV.valueSource);
+            }, SandboxDataViewSerializer.prototype.reconstructValuesGroups = function(dataView, serializedDV) {
+                dataView && dataView.categorical && dataView.categorical.values && dataView.categorical.values[0] && (dataView.categorical.values.grouped = function() {
+                    return JSON.parse(serializedDV.valueGroups);
+                });
+            }, SandboxDataViewSerializer.prototype.replaceOpaqueIndexWithScopeIds = function(index) {
+                return index < this.identitiesArray.length ? this.identitiesArray[index] : null;
+            }, SandboxDataViewSerializer;
+        }();
+        visualSandbox.SandboxDataViewSerializer = SandboxDataViewSerializer;
+    }(powerbi.visualSandbox || (powerbi.visualSandbox = {}));
+}(powerbi = powerbi || {}), function(powerbi) {
+    !function(visualSandbox) {
+        visualSandbox.createSandboxVisualHostLicenseManagerService = function(messageProxy, promiseFactory, sandboxPromiseHandler) {
+            return new SandboxVisualHostLicenseManagerService(messageProxy, promiseFactory, sandboxPromiseHandler);
+        };
+        var SandboxVisualHostLicenseManagerService = function() {
+            function SandboxVisualHostLicenseManagerService(messageProxy, promiseFactory, sandboxPromiseHandler) {
+                this.messageProxy = messageProxy, this.promiseFactory = promiseFactory, this.sandboxPromiseHandler = sandboxPromiseHandler;
+            }
+            return SandboxVisualHostLicenseManagerService.prototype.getAvailableServicePlans = function() {
+                var promise = this.sandboxPromiseHandler.CreatePromise(this.promiseFactory.defer()), message = {
+                    eventName: "getAvailableServicePlans",
+                    arguments: [ promise.id ]
+                };
+                return this.messageProxy.postMessage(message), promise.deferred.promise;
+            }, SandboxVisualHostLicenseManagerService.prototype.notifyLicenseRequired = function(message) {
+                var promise = this.sandboxPromiseHandler.CreatePromise(this.promiseFactory.defer()), message = {
+                    eventName: "notifyLicenseRequired",
+                    arguments: [ message, promise.id ]
+                };
+                return this.messageProxy.postMessage(message), promise.deferred.promise;
+            }, SandboxVisualHostLicenseManagerService.prototype.notifyFeatureBlocked = function(message) {
+                var promise = this.sandboxPromiseHandler.CreatePromise(this.promiseFactory.defer()), message = {
+                    eventName: "notifyFeatureBlocked",
+                    arguments: [ message, promise.id ]
+                };
+                return this.messageProxy.postMessage(message), promise.deferred.promise;
+            }, SandboxVisualHostLicenseManagerService.prototype.clearLicenseNotification = function() {
+                var promise = this.sandboxPromiseHandler.CreatePromise(this.promiseFactory.defer()), message = {
+                    eventName: "clearLicenseNotification",
+                    arguments: [ promise.id ]
+                };
+                return this.messageProxy.postMessage(message), promise.deferred.promise;
+            }, SandboxVisualHostLicenseManagerService;
+        }();
+        visualSandbox.SandboxVisualHostLicenseManagerService = SandboxVisualHostLicenseManagerService;
+    }(powerbi.visualSandbox || (powerbi.visualSandbox = {}));
+}(powerbi = powerbi || {}), function(powerbi) {
+    !function(visualSandbox) {
+        visualSandbox.createSandboxVisualHostAuthenticationService = function(messageProxy, promiseFactory, sandboxPromiseHandler) {
+            return new SandboxVisualHostAuthenticationService(messageProxy, promiseFactory, sandboxPromiseHandler);
+        };
+        var SandboxVisualHostAuthenticationService = function() {
+            function SandboxVisualHostAuthenticationService(messageProxy, promiseFactory, sandboxPromiseHandler) {
+                this.messageProxy = messageProxy, this.promiseFactory = promiseFactory, this.sandboxPromiseHandler = sandboxPromiseHandler;
+            }
+            return SandboxVisualHostAuthenticationService.prototype.getResourceUrl = function() {
+                var promise = this.sandboxPromiseHandler.CreatePromise(this.promiseFactory.defer()), message = {
+                    eventName: "getResourceUrl",
+                    arguments: [ promise.id ]
+                };
+                return this.messageProxy.postMessage(message), promise.deferred.promise;
+            }, SandboxVisualHostAuthenticationService.prototype.getAADAuthenticationToken = function() {
+                var promise = this.sandboxPromiseHandler.CreatePromise(this.promiseFactory.defer()), message = {
+                    eventName: "getAADAuthenticationToken",
+                    arguments: [ promise.id ]
+                };
+                return this.messageProxy.postMessage(message), promise.deferred.promise;
+            }, SandboxVisualHostAuthenticationService.prototype.getAADToken = function() {
+                var promise = this.sandboxPromiseHandler.CreatePromise(this.promiseFactory.defer()), message = {
+                    eventName: "getAADToken",
+                    arguments: [ promise.id ]
+                };
+                return this.messageProxy.postMessage(message), promise.deferred.promise;
+            }, SandboxVisualHostAuthenticationService.prototype.getWACToken = function(proxyArgs, resourceEtag) {
+                var promise2 = this.sandboxPromiseHandler.CreatePromise2(this.promiseFactory.defer()), proxyArgs = {
+                    resourceEtag: resourceEtag,
+                    resourceSiteUrl: proxyArgs,
+                    promiseId: promise2.id
+                };
+                return this.messageProxy.postMessage({
+                    eventName: "getWACToken",
+                    arguments: [ proxyArgs ]
+                }), promise2.deferred.promise;
+            }, SandboxVisualHostAuthenticationService.prototype.getSignedInAccessToken = function() {
+                return this.promiseFactory.reject();
+            }, SandboxVisualHostAuthenticationService.prototype.getClusterInfo = function() {
+                return this.promiseFactory.reject();
+            }, SandboxVisualHostAuthenticationService;
+        }();
+        visualSandbox.SandboxVisualHostAuthenticationService = SandboxVisualHostAuthenticationService;
+    }(powerbi.visualSandbox || (powerbi.visualSandbox = {}));
+}(powerbi = powerbi || {}), function(powerbi) {
+    !function(visualSandbox) {
+        visualSandbox.createSandboxVisualHostDownloadService = function(messageProxy, promiseFactory, sandboxPromiseHandler) {
+            return new SandboxVisualHostDownloadService(messageProxy, promiseFactory, sandboxPromiseHandler);
+        };
+        var SandboxVisualHostDownloadService = function() {
+            function SandboxVisualHostDownloadService(messageProxy, promiseFactory, sandboxPromiseHandler) {
+                this.messageProxy = messageProxy, this.promiseFactory = promiseFactory, this.sandboxPromiseHandler = sandboxPromiseHandler;
+            }
+            return SandboxVisualHostDownloadService.prototype.downloadFile = function(resourceLocation, fileName, fileType, fileDescription) {
+                throw new Error("Not implemented");
+            }, SandboxVisualHostDownloadService.prototype.exportVisualsContent = function(content, fileName, fileType, message) {
+                var promise = this.sandboxPromiseHandler.CreatePromise(this.promiseFactory.defer());
+                return content && fileName && fileType && message ? (message = {
+                    eventName: "exportVisualsContent",
+                    arguments: [ content, fileName, fileType, message, promise.id ]
+                }, this.messageProxy.postMessage(message)) : promise.deferred.reject(), promise.deferred.promise;
+            }, SandboxVisualHostDownloadService;
+        }();
+        visualSandbox.SandboxVisualHostDownloadService = SandboxVisualHostDownloadService;
+    }(powerbi.visualSandbox || (powerbi.visualSandbox = {}));
+}(powerbi = powerbi || {});
